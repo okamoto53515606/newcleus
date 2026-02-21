@@ -1,0 +1,129 @@
+User: よくおこりまうが、githubからpullできないのでpullしたいです
+> git pull --tags
+There is no tracking information for the current branch.
+
+
+GitHub Copilot: Ran terminal command:  cd /home/workspace/newcleus && git branch --set-upstream-to=origin/main main && git pull --tags
+
+完了しました。`main` ブランチのupstreamを `origin/main` に設定し、pullが成功しました。blueprint.md が更新されています。
+
+今後は `git pull` だけで問題なく動作します。
+
+User: ありがとう。まずは意見をください。database-schema.mdについて、カテゴリは実態として汎用マスタを意味しているので、命名を変えた方がよいのでは？また汎用フィールドのラベル定義は汎用マスタの項目定義を意味するので、こちらもカテゴリ（汎用マスタ）のコレクションにまとめるべきでは？ご意見下さい。
+
+GitHub Copilot: 良い指摘です。現状の設計を踏まえて意見を述べます。
+
+---
+
+### 1. `categories` → 命名変更について：**賛成**
+
+現在の `categories` は単なる分類ラベルではなく、**コンテンツの型定義**（どんなフィールドを持つか）を担っています。「お知らせ」「求人情報」など、それぞれが独自のフィールド構成を持つ汎用マスタそのものです。
+
+**候補:**
+
+| 名前 | メリット | デメリット |
+|------|---------|-----------|
+| `masters` | 汎用マスタの直訳。日本語圏の開発者に馴染みやすい | 英語圏では意味が曖昧 |
+| `contentTypes` | 「コンテンツの型定義」という役割を正確に表現 | やや長い |
+| `schemas` | 技術的に正確 | Firestoreのスキーマと紛らわしい |
+
+**推奨: `contentTypes`** — 役割が最も明確で、フロント・API両方で自然に読めます。`masters` も悪くないですが、Firestoreのコレクション名は英語圏のチームメンバーが見ても通じる名前が望ましいです。
+
+---
+
+### 2. `fieldLabels` を `categories`（汎用マスタ）に統合：**強く賛成**
+
+現状の設計には明確な問題点があります：
+
+- **`fieldLabels` のドキュメントIDがカテゴリIDと同一** → 完全な1:1関係
+- 1:1関係を別コレクションにする意味がない（読み取りコスト2倍、整合性管理も必要）
+- ラベルデータは最大50フィールド × 数十バイト程度で、Firestoreの1MBドキュメント上限には全く問題なし
+
+**統合後のイメージ:**
+
+```json
+// /sites/{siteId}/contentTypes/{contentTypeId}
+{
+  "name": "求人情報",
+  "shortname": "recruit",
+  "sortOrder": 2,
+  "fieldLabels": {
+    "text0": "募集概要",
+    "text1": "給与・待遇",
+    "text3": "勤務時間",
+    "file0": "募集画像",
+    "flag0": "トップ表示"
+  },
+  "createdAt": "2026-02-21T00:00:00Z"
+}
+```
+
+**メリット:**
+- 1回のFirestore readでコンテンツ型+フィールド定義を取得
+- `_label` サフィックスが不要になり、マップのキーがシンプルに
+- `items` の `categoryId` → `contentTypeId` に変わり、意味が明確に
+
+---
+
+### まとめ
+
+| 変更 | 判断 |
+|------|------|
+| `categories` → `contentTypes` に改名 | 賛成 |
+| `fieldLabels` を `contentTypes` のフィールドに統合 | 強く賛成 |
+| `items.categoryId` → `items.contentTypeId` に改名 | 上記に連動して必要 |
+
+この方向で database-schema.md を改訂しましょうか？
+
+User: 賛成ありがとう。修正して、日本語コミットログつけて
+
+GitHub Copilot: 
+
+User: 現在の他の修正ふくめてすべてコミットとpushをお願いします。DBの件は理由もコミットログに記載お願いします！
+
+GitHub Copilot: Created 2 todos
+
+Ran terminal command:  cd /home/workspace/newcleus && git status
+
+Now let me apply all the changes to the database-schema.md. The changes are extensive so I'll make them systematically. 
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#1-1), lines 1 to 50
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#50-50), lines 50 to 283
+
+The changes are extensive throughout the document. Let me rewrite the full file with all the modifications applied. 
+
+Created [](file:///home/workspace/newcleus/docs/database-schema.md.new)
+
+Ran terminal command:  cd /home/workspace/newcleus && mv docs/database-schema.md.new docs/database-schema.md
+
+Starting: *全変更をコミット＆プッシュ* (2/2)
+
+Ran terminal command:  cd /home/workspace/newcleus && git diff --stat
+
+Ran terminal command:  cd /home/workspace/newcleus && git add -A && git commit -m "docs: categories→contentTypes改名、fieldLabels統合
+
+- categories サブコレクションを contentTypes に改名
+  理由: カテゴリは実態として汎用マスタ（コンテンツの型定義）であり、
+  命名が役割を正確に表していなかった
+- fieldLabels サブコレクションを contentTypes のフィールドに統合
+  理由: fieldLabels は contentType と1:1関係であり、別コレクションに
+  分離する意味がなかった（読み取りコスト2倍、整合性管理の複雑化）
+- items.categoryId → items.contentTypeId に改名
+- セクション番号を再採番（旧4.fieldLabels削除に伴い5→4, 6→5, 7→6, 8→7）
+- バージョンを v0.0.1 → v0.0.2 に更新
+- .idx/dev.nix, .idx/icon.png, favicon.ico を削除"
+
+Ran terminal command:  cd /home/workspace/newcleus && git push
+
+Completed: *全変更をコミット＆プッシュ* (2/2)
+
+コミット＆プッシュ完了しました。変更内容：
+
+- **`categories` → `contentTypes`** に改名（汎用マスタとしての役割を明確化）
+- **`fieldLabels` サブコレクションを廃止** → `contentTypes` の `fieldLabels` マップフィールドに統合（1:1関係の別コレクション分離を解消）
+- **`items.categoryId` → `items.contentTypeId`** に改名
+- セクション番号を再採番、バージョンを v0.0.2 に更新
+- 不要ファイル（`.idx/dev.nix`, `.idx/icon.png`, `favicon.ico`）の削除も含めてコミット
+
+Made changes.
