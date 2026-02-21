@@ -1,6 +1,6 @@
 # newcleus — Blueprint v0.0.1
 
-> 名前の由来: "new" + "Nucleus CMS"。 10年以上前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
+> 名前の由来: "new" + "Nucleus CMS"。 20年前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
 
 ## 1. プロダクト概要
 
@@ -31,7 +31,7 @@
 ### 基本情報
 
 - **想定規模:** 年間20サイト未満
-- **旧資産:** 10年前のNucleus CMS（PHP）の設計思想・DB設計 + 1ヵ月前のFirebase個人メディア「homepage」のコード資産
+- **旧資産:** 20年前のNucleus CMS（PHP）の設計思想・DB設計 + 1ヵ月前のFirebase個人メディア「homepage」のコード資産
 - **新技術スタック:** Next.js (TypeScript) + Firebase (Firestore / Storage / Auth / App Hosting)
 
 ---
@@ -249,10 +249,10 @@ GET /api/v1/sites/{siteId}/embed.js
 
 - **開発マシン:** WSL (Ubuntu 22)
 - **IDE:** VS Code + GitHub Copilot (Claude)
-- **実行環境:** Firebase Studio からデプロイ or ローカル `next dev` + Firebase Emulator
+- **実行環境:** Firebase Studio からデプロイ or ローカル `next dev`
 - **デプロイ:** Firebase App Hosting (`git push` → 自動ビルド・デプロイ)
 - **Firebaseプロジェクト:** homepageとは**完全に別プロジェクト**を新規作成（一切干渉しない）
-- **ドメイン:** `easycms.okamomedia.tokyo` (メディア本体は `www.okamomedia.tokyo`)
+- **ドメイン:** `newcleus.okamomedia.tokyo` (メディア本体は `www.okamomedia.tokyo`)
 
 ---
 
@@ -283,7 +283,6 @@ newcleusは「記事CMS」だが、汎用フィールド (text0-9, file0-9, flag
 | **施工事例 / Before・After** | 1件=1事例 | file0=Before, file1=After, text0=説明 | スライダー比較UI |
 | **メニュー/料金表** | 1件=1メニュー | text0=メニュー名, num0=価格, flag0=おすすめ | テーブル/リスト表示 |
 | **イベントカレンダー** | 1件=1イベント | date0=開催日, text0=場所, flag0=受付中 | date0ソートで直近イベント表示 |
-| **多言語パーツ** | 1件=1コンテンツ | text0=日本語, text1=英語, text2=中国語 | embed.jsのlangパラメータで切替 |
 
 ### 9.3 API設計へのフィードバック
 
@@ -300,10 +299,9 @@ GET /api/v1/sites/{siteId}/items
 
 ---
 
-## 10. 参照資料
+## 10. 参照資料 `.sample-files`配下
 
-- 旧Nucleusソース: 本リポジトリ内 `cms/` 配下
-- 旧NucleusDB: `wai.setting/mysqldump.sql`
-- homepage資産: 本リポジトリ内 `homepage/` 配下
+- 旧NucleusDB: testcms1のmysqldump
+- homepage資産: `homepage/` 配下
 - homepage blueprint: `homepage/docs/blueprint.md`
 - homepage DB設計: `homepage/docs/database-schema.md`
