@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // デフォルトですべてのクライアントからの直接アクセスを拒否します。
+    // データアクセスはすべてサーバーサイドのAdmin SDK経由で行うため、
+    // これが最も安全な設定です。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
