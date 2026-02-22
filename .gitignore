@@ -46,3 +46,7 @@ firestore-debug.log
 
 # .sample-files
 *.sample-files
+
+# Project IDX / Firebase Studio specific
+/.idx/
+
