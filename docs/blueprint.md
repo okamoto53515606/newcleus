@@ -1,4 +1,4 @@
-# newcleus — Blueprint v0.0.1
+# newcleus — Blueprint v1.0.2
 
 > 名前の由来: "new" + "Nucleus CMS"。 20年前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
 
@@ -13,8 +13,8 @@
 ┌─ SaaS全体 ──────────────────────────────────────────┐
 │                                                       │
 │  サイトA (= 利用者A)         サイトB (= 利用者B)       │
-│  ├── カテゴリ: お知らせ      ├── カテゴリ: ニュース    │
-│  ├── カテゴリ: 求人情報      └── カテゴリ: ブログ      │
+│  ├── CT: お知らせ            ├── CT: ニュース          │
+│  ├── CT: 求人情報            └── CT: ブログ            │
 │  ├── 記事1, 記事2, ...       ├── 記事1, 記事2, ...    │
 │  └── owner: userA@gmail     └── owner: userB@gmail    │
 │                                                       │
@@ -51,7 +51,7 @@
                │
 ┌──────────────▼───────────────────────────────────────────┐
 │  Firebase                                                 │
-│  Firestore: サイト・記事・カテゴリ・ユーザー・フィールド定義│
+│  Firestore: サイト・記事・コンテンツタイプ・ユーザー       │
 │  Storage:   画像ファイル (CDN配信)                         │
 │  Auth:      Google OAuth + Custom Claims (admin/owner)     │
 └──────────────┬───────────────────────────────────────────┘
@@ -68,7 +68,7 @@
 
 利用者サイト (任意のHTML):
   <div id="cms-news"></div>
-  <script src="https://easycms.okamomedia.tokyo/api/v1/sites/{siteId}/embed.js?category=news&limit=5"></script>
+  <script src="https://easycms.okamomedia.tokyo/api/v1/sites/{siteId}/embed.js?contentType=news&limit=5"></script>
 ```
 
 ---
@@ -103,10 +103,10 @@
 |----------------|----------------|
 | blog (テナント単位) | `sites/{siteId}` コレクション |
 | item (記事) | `sites/{siteId}/items/{itemId}` サブコレクション |
-| category | `sites/{siteId}/categories/{catId}` サブコレクション |
+| category | `sites/{siteId}/contentTypes/{contentTypeId}` サブコレクション |
 | member + team (ユーザーとブログの紐づけ) | `users/{uid}.siteIds[]` + Custom Claims |
 | MyShowBlogsの汎用フィールド (text0-9, file0-9, flag0-9, date0-9, num0-9) | `items/{itemId}.fields` マップ |
-| MyShowBlogsのフィールド定義 (plugin_option_desc) | `sites/{siteId}/fieldLabels/{catId}` |
+| MyShowBlogsのフィールド定義 (plugin_option_desc) | `contentTypes/{contentTypeId}.fieldLabels` マップ |
 | MyShowBlogsのフィルタ (flag0=1等) | 公開APIのクエリパラメータ |
 | iframe埋め込み | scriptタグ埋め込み (embed.js) に進化 |
 | テンプレート (skin/template) | embed.js + 利用者サイト側のCSS/JS に委ねる |
@@ -126,13 +126,13 @@
 ### 5.2 サイト管理 (superadmin)
 
 - サイト作成: name, shortname, ownerEmail, allowedOrigins
-- サイト作成時にFirestoreにドキュメント + 初期カテゴリ自動生成
+- サイト作成時にFirestoreにドキュメント + 初期コンテンツタイプ自動生成
 - サイト一覧・編集・削除
 
-### 5.3 カテゴリ管理 (owner)
+### 5.3 コンテンツタイプ管理 (owner)
 
-- カテゴリCRUD (name, sortOrder)
-- カテゴリ別の汎用フィールドラベル定義
+- コンテンツタイプCRUD (name, shortname, sortOrder, fieldLabels)
+- コンテンツタイプ別の汎用フィールドラベル定義 (fieldLabelsマップ)
   - 例: text0 = "概要", file0 = "メイン画像", flag0 = "公開フラグ"
   - ラベル未定義のフィールドは管理画面に表示しない
 
@@ -142,8 +142,8 @@
 - 記事作成・編集
   - タイトル入力
   - TinyMCE 7 Core でHTML本文編集（画像埋め込み対応）
-  - カテゴリ選択
-  - 汎用フィールド入力（カテゴリのfieldLabels定義に基づき動的フォーム生成）
+  - コンテンツタイプ選択
+  - 汎用フィールド入力（コンテンツタイプのfieldLabels定義に基づき動的フォーム生成）
     - text: テキストエリア
     - file: 画像アップロード（Firebase Storage）
     - flag: チェックボックス
@@ -168,7 +168,7 @@
 
 ```
 GET /api/v1/sites/{siteId}/items
-  ?category={categoryId}    カテゴリフィルタ (任意)
+  ?contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
   &limit={number}           取得件数 (デフォルト10, 最大100)
   &page={number}            ページ番号 (デフォルト1)
   &sort={order}             日付ソート (desc または asc, デフォルトdesc)
@@ -179,7 +179,7 @@ GET /api/v1/sites/{siteId}/items/{itemId}
 
 GET /api/v1/sites/{siteId}/embed.js
   ?target={elementId}       描画先DOM要素ID (デフォルト "cms-content")
-  &category={categoryId}    カテゴリフィルタ (任意)
+  &contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
   &limit={number}           表示件数 (デフォルト5)
   &flag0=1                  汎用フラグフィルタ (任意)
 ```
@@ -193,7 +193,7 @@ GET /api/v1/sites/{siteId}/embed.js
       "id": "xxx",
       "title": "スタッフ募集",
       "body": "<p>HTML本文</p>",
-      "category": { "id": "xxx", "name": "お知らせ" },
+      "contentType": { "id": "xxx", "name": "お知らせ" },
       "fields": {
         "text0": "概要テキスト",
         "file0": "https://storage.googleapis.com/.../image.jpg",
@@ -234,12 +234,12 @@ GET /api/v1/sites/{siteId}/embed.js
 | Phase | 内容 | 前提 |
 |-------|------|------|
 | **1** | プロジェクト雛形作成 | homepageからfork → 不要物削除 → Firestore schema定義 → Firebase新プロジェクト作成 |
-| **2** | 管理画面: サイト管理CRUD + カテゴリ管理CRUD | Phase 1完了 |
+| **2** | 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | Phase 1完了 |
 | **3** | 管理画面: 記事CRUD + TinyMCEエディタ + 画像アップロード + 汎用フィールド | Phase 2完了 |
 | **4** | 公開API: JSON API + CORSハンドリング | Phase 3完了 |
 | **5** | 公開API: embed.js (scriptタグ埋め込み) | Phase 4完了 |
 | **6** | テナント管理: サイト作成時の自動セットアップ + owner招待フロー | Phase 4完了 |
-| **7** | fieldLabels定義画面 + 動的フォーム生成 | Phase 3完了 |
+| **7** | コンテンツタイプのfieldLabels定義 + 動的フォーム生成 | Phase 3完了 |
 
 **Phase 1→3 で管理画面MVP、Phase 4→5 で公開配信MVP。**
 
