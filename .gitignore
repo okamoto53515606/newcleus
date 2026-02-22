@@ -44,9 +44,20 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 
-# .sample-files
-*.sample-files
+# memo
+.memo/*
+
+# .idea
+.idea/*
 
 # Project IDX / Firebase Studio specific
 /.idx/
 
+# package-lock.json
+package-lock.json
+
+# .modified
+.modified
+
+# .sample-files
+*.sample-files
