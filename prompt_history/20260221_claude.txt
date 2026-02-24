@@ -607,8 +607,8 @@ NucleusのDB設計思想（blog=テナント、item=記事、MyShowBlogsの汎�
 
 ```
 sites/{siteId}                          ← cmsnucleus_blog に相当
-  ├── name: "しんゆり青木整形外科"
-  ├── shortname: "aoki-clinic"
+  ├── name: "クリニック"
+  ├── shortname: "clinic"
   ├── ownerUid: "xxx"                   ← Google OAuth uid
   ├── ownerEmail: "xxx@gmail.com"
   ├── allowedOrigins: ["https://aoki-clinic.com"]  ← CORS許可
