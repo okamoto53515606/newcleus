@@ -1,4 +1,4 @@
-# newcleus — Blueprint v0.0.2
+# newcleus — Blueprint v0.0.3
 
 > 名前の由来: "new" + "Nucleus CMS"。 20年前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
 
@@ -16,11 +16,11 @@
 │  ├── CT: お知らせ            ├── CT: ニュース          │
 │  ├── CT: 求人情報            └── CT: ブログ            │
 │  ├── 記事1, 記事2, ...       ├── 記事1, 記事2, ...    │
-│  └── owner: userA@gmail     └── owner: userB@gmail    │
+│  └── siteadmin: userA@gmail  └── siteadmin: userB@gmail │
 │                                                       │
 │  ※ 利用者Aは自分のサイトAの記事のみ見える・操作できる  │
 │  ※ 利用者Bは自分のサイトBの記事のみ見える・操作できる  │
-│  ※ superadmin（運営者）は全サイトを管理できる          │
+│  ※ admin（運営者）は全サイトを管理できる               │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -53,7 +53,7 @@
 │  Firebase                                                 │
 │  Firestore: サイト・記事・コンテンツタイプ・ユーザー       │
 │  Storage:   画像ファイル (CDN配信)                         │
-│  Auth:      Google OAuth + Custom Claims (admin/owner)     │
+│  Auth:      Google OAuth + Custom Claims (admin/siteadmin) │
 └──────────────┬───────────────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────────────┐
@@ -82,7 +82,7 @@
 | Client SDK 初期化 | `src/lib/firebase.ts` | そのまま |
 | 画像アップロード | `article-generator-form.tsx` 内の Storage upload 処理 | 抽出して共通化 |
 | HttpOnly Session Cookie | `/api/auth/session` | そのまま |
-| Admin Layout + ロールチェック | `src/app/admin/layout.tsx`, `src/lib/auth.ts` の `getUser()` | role拡張 |
+| Admin Layout + ロールチェック | `src/app/admin/layout.tsx`, `src/lib/auth.ts` の `getUser()` | admin/siteadmin 2ロールに変更 |
 | apphosting.yaml | `apphosting.yaml` | そのまま |
 | Firestore Rules (全拒否) | `firestore.rules` | そのまま |
 
@@ -104,39 +104,108 @@
 | blog (テナント単位) | `sites/{siteId}` コレクション |
 | item (記事) | `sites/{siteId}/items/{itemId}` サブコレクション |
 | category | `sites/{siteId}/contentTypes/{contentTypeId}` サブコレクション |
-| member + team (ユーザーとブログの紐づけ) | `users/{uid}.siteIds[]` + Custom Claims |
+| member + team (ユーザーとブログの紐づけ) | Custom Claims (`siteIds[]`) + `sites/{siteId}.adminUsers[]` |
 | MyShowBlogsの汎用フィールド (text0-9, file0-9, flag0-9, date0-9, num0-9) | `items/{itemId}.fields` マップ |
 | MyShowBlogsのフィールド定義 (plugin_option_desc) | `contentTypes/{contentTypeId}.fieldLabels` マップ |
 | MyShowBlogsのフィルタ (flag0=1等) | 公開APIのクエリパラメータ |
 | iframe埋め込み | scriptタグ埋め込み (embed.js) に進化 |
-| テンプレート (skin/template) | embed.js + 利用者サイト側のCSS/JS に委ねる |
+| テンプレート (skin/template) | `contentTypes/{ctId}/templates` サブコレクション + Handlebarsテンプレートエンジン |
 
 ---
 
 ## 5. 管理画面の機能一覧
 
-### 5.1 認証・ユーザー管理
+### 5.1 認証・権限管理
 
 - Googleログインのみ（独自パスワードなし）
-- ロール: `superadmin`（システム管理者）/ `owner`（サイトオーナー）/ `editor`（編集者）
-- superadminがサイト作成 + ownerのGmailアドレスを紐づけ
-- ownerがeditorを追加可能
-- Custom Claims に `role` と `siteIds` を格納
+- ロール: `admin`（スーパー管理者）/ `siteadmin`（サイト管理者）の **2種のみ**
+- **権限は Firebase Auth Custom Claims のみで管理（DBに権限情報を持たない）**
+- `admin` はCLIで付与（`firebase functions:shell` 等で `setCustomUserClaims`）
+- `siteadmin` は招待フローで付与（後述）
+- Custom Claims 構造: `{ role: "admin" | "siteadmin", siteIds: ["siteId1", ...] }`
+  - `admin` の場合 `siteIds` は不要（全サイトアクセス可）
+  - `siteadmin` は `siteIds` に紐づくサイトのみ操作可能（複数サイト紐づけ可）
 
-### 5.2 サイト管理 (superadmin)
+### 5.1.1 siteadmin 招待フロー
 
-- サイト作成: name, shortname, ownerEmail, allowedOrigins
+```
+1. admin: 管理画面でサイト選択 → 対象者のGmail入力 → 招待トークン生成
+   - JWT payload: { siteId, email, exp（有効期限） }
+   - sites/{siteId}.adminUsers に { email, status: "pending" } を追加
+
+2. 招待URLを対象者に案内
+   例: https://newcleus.okamomedia.tokyo/invite?token=xxx
+
+3. 対象者: URL開く → Googleログイン
+
+4. サーバー側:
+   - JWTを検証（期限・署名）
+   - ログイン中のGmail === JWT内のemail を確認
+   - Admin SDK で Custom Claims を更新:
+     { role: "siteadmin", siteIds: [...既存, newSiteId] }
+   - sites/{siteId}.adminUsers の該当ユーザーを更新:
+     { uid, email, displayName, status: "active" }
+   - users/{uid} ドキュメントを作成/更新
+```
+
+### 5.2 サイト管理 (admin)
+
+- サイト作成: name, shortname, allowedOrigins
 - サイト作成時にFirestoreにドキュメント + 初期コンテンツタイプ自動生成
 - サイト一覧・編集・削除
+- siteadmin招待（サイト選択 → Gmail入力 → 招待URL生成）
+- サイト別のsiteadmin一覧表示（`sites/{siteId}.adminUsers` から取得）
 
-### 5.3 コンテンツタイプ管理 (owner)
+### 5.3 コンテンツタイプ管理 (admin / siteadmin)
 
 - コンテンツタイプCRUD (name, shortname, sortOrder, fieldLabels)
 - コンテンツタイプ別の汎用フィールドラベル定義 (fieldLabelsマップ)
   - 例: text0 = "概要", file0 = "メイン画像", flag0 = "公開フラグ"
   - ラベル未定義のフィールドは管理画面に表示しない
 
-### 5.4 記事管理 (owner / editor)
+### 5.4 テンプレート管理 (admin / siteadmin)
+
+- コンテンツタイプに紐づくテンプレートのCRUD
+- テンプレートエンジン: **Handlebars** — Mustache互換 + `{{#if}}`, `{{#each}}`, `{{#unless}}`, カスタムヘルパー等、表現力が高くテンプレート構文を覚えれば柔軟に対応可能
+- 管理画面でテンプレートHTMLをコードエディタで編集
+- プレビュー機能: ダミーデータでテンプレート適用結果を確認
+- 1コンテンツタイプに複数テンプレート可（例: 一覧用、ティッカー用、カード用）
+- テンプレート保存時に `<script>` タグ / `on*` イベント属性をサニタイズ除去
+
+#### テンプレートで利用可能な変数
+
+| 変数 | 型 | 説明 |
+|------|------|------|
+| `items` | 配列 | 条件にマッチした記事リスト。各要素は `title`, `body`, `fields.*`, `createdAt` 等全項目利用可 |
+| `item` | オブジェクト | 先頭1件の記事。単一記事表示用のショートカット |
+
+※ 条件にマッチする記事が0件の場合、embed.jsは何も出力しない
+
+#### テンプレート例（お知らせ一覧）
+
+```handlebars
+{{#each items}}
+<div class="news-item">
+  <time datetime="{{createdAt}}">{{formatDate createdAt}}</time>
+  <h3>{{title}}</h3>
+  <p>{{fields.text0}}</p>
+  {{#if fields.flag0}}<span class="badge-urgent">緊急</span>{{/if}}
+</div>
+{{/each}}
+```
+
+#### テンプレート例（単一ページ表示）
+
+```handlebars
+{{#with item}}
+<article>
+  <h2>{{title}}</h2>
+  <div>{{{body}}}</div>
+</article>
+{{/with}}
+```
+
+### 5.5 記事管理 (admin / siteadmin)
 
 - 記事一覧（自サイトの記事のみ表示）
 - 記事作成・編集
@@ -152,7 +221,7 @@
   - 公開/下書き切り替え
 - 記事削除
 
-### 5.5 WYSIWYGエディタ
+### 5.6 WYSIWYGエディタ
 
 - TinyMCE 7 Core（MIT License）
 - 最低限の装飾: 太字、イタリック、リンク、箇条書き、見出し(h2-h4)
@@ -180,6 +249,7 @@ GET /api/v1/sites/{siteId}/items/{itemId}
 GET /api/v1/sites/{siteId}/embed.js
   ?target={elementId}       描画先DOM要素ID (デフォルト "cms-content")
   &contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
+  &template={templateName}  テンプレート名 (任意、未指定時はデフォルトテンプレート)
   &limit={number}           表示件数 (デフォルト5)
   &flag0=1                  汎用フラグフィルタ (任意)
 ```
@@ -220,12 +290,15 @@ GET /api/v1/sites/{siteId}/embed.js
 
 ### embed.js の動作
 
-```javascript
-// 1. 自身のscriptタグのsrc URLからパラメータを取得
-// 2. 同一オリジンのAPIを叩いてJSON取得
-// 3. target要素にHTMLを描画（リスト表示 + 詳細リンク）
-// 4. CSSは最小限のデフォルトスタイルを注入（利用者サイト側で上書き可能）
 ```
+1. 自身のscriptタグのsrc URLからパラメータを取得
+2. 同一オリジンのAPIを叩く
+3. サーバー側で Handlebars テンプレート適用済みHTMLを生成
+4. target要素にinnerHTMLで描画
+   - マッチする記事が0件の場合、何も出力しない
+```
+
+embed.js自体は軽量（fetch + innerHTMLのみ）。テンプレートレンダリングはサーバーサイド(SSR)で完結。
 
 ---
 
@@ -235,11 +308,11 @@ GET /api/v1/sites/{siteId}/embed.js
 |-------|------|------|
 | **1** | プロジェクト雛形作成 | homepageからfork → 不要物削除 → Firestore schema定義 → Firebase新プロジェクト作成 |
 | **2** | 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | Phase 1完了 |
-| **3** | 管理画面: 記事CRUD + TinyMCEエディタ + 画像アップロード + 汎用フィールド | Phase 2完了 |
+| **3** | 管理画面: 記事CRUD + TinyMCEエディタ + 画像アップロード + 汎用フィールド + テンプレート管理 | Phase 2完了 |
 | **4** | 公開API: JSON API + CORSハンドリング | Phase 3完了 |
-| **5** | 公開API: embed.js (scriptタグ埋め込み) | Phase 4完了 |
-| **6** | テナント管理: サイト作成時の自動セットアップ + owner招待フロー | Phase 4完了 |
-| **7** | コンテンツタイプのfieldLabels定義 + 動的フォーム生成 | Phase 3完了 |
+| **5** | 公開API: embed.js (scriptタグ埋め込み + Handlebars SSR) | Phase 4完了 |
+| **6** | テナント管理: サイト作成時の自動セットアップ + siteadmin招待フロー (JWT) | Phase 4完了 |
+| **7** | コンテンツタイプのfieldLabels定義 + 動的フォーム生成 + テンプレートエディタ | Phase 3完了 |
 
 **Phase 1→3 で管理画面MVP、Phase 4→5 で公開配信MVP。**
 

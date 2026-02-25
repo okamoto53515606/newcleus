@@ -1,4 +1,4 @@
-# newcleus — データベース設計書 v0.0.2
+# newcleus — データベース設計書 v0.0.3
 
 Firestore データベース設計。Nucleus CMS の設計思想 (blog/item/contentType/member/team/MyShowBlogs汎用フィールド) を Firestore ネイティブに翻訳したもの。
 
@@ -10,8 +10,9 @@ Firestore データベース設計。Nucleus CMS の設計思想 (blog/item/cont
 |-------------|------|-------------|
 | `sites` | サイト（テナント）管理 | `cmsnucleus_blog` |
 | `sites/{siteId}/contentTypes` | コンテンツタイプ（汎用マスタ） | `cmsnucleus_category` + `cmsnucleus_plugin_option_desc` (一部) |
+| `sites/{siteId}/contentTypes/{ctId}/templates` | 表示テンプレート (Handlebars) | `cmsnucleus_template` |
 | `sites/{siteId}/items` | 記事 | `cmsnucleus_item` + `cmsnucleus_plugin_myshowblogs` |
-| `users` | ユーザー | `cmsnucleus_member` + `cmsnucleus_team` |
+| `users` | ユーザープロフィール（権限情報なし） | `cmsnucleus_member` |
 
 ---
 
@@ -28,18 +29,37 @@ Firestore データベース設計。Nucleus CMS の設計思想 (blog/item/cont
 |-------------|----------|------|------|-------------|
 | `name` | `string` | ○ | サイト表示名 (例: "サンプルクリニック") | `bname` |
 | `shortname` | `string` | ○ | URL識別用の短縮名 (英数字ハイフン, 例: "sample-clinic") | `bshortname` |
-| `ownerUid` | `string` | ○ | サイトオーナーのFirebase Auth uid | — |
-| `ownerEmail` | `string` | ○ | オーナーのGmailアドレス | — |
 | `allowedOrigins` | `array of string` | ○ | CORS許可オリジン (例: `["https://sample-clinic.com"]`) | — |
+| `adminUsers` | `array of map` | ○ | サイト管理者一覧 (後述) | `cmsnucleus_team` |
 | `createdAt` | `timestamp` | ○ | 作成日時 | — |
 | `updatedAt` | `timestamp` | ○ | 更新日時 | — |
+
+### adminUsers 配列の構造
+
+サイトに紐づく管理者（siteadmin）の一覧。招待時に pending で追加され、Googleログイン完了後に active に更新される。
+
+| フィールド名 | データ型 | 必須 | 説明 |
+|-------------|----------|------|------|
+| `uid` | `string` | — | Firebase Auth uid（未登録時は空） |
+| `email` | `string` | ○ | 招待先Gmailアドレス |
+| `displayName` | `string` | — | 表示名（登録後に設定） |
+| `status` | `string` | ○ | `"pending"` (招待中) / `"active"` (登録済み) |
+
+**例:**
+```json
+{
+  "adminUsers": [
+    { "uid": "abc123", "email": "user@gmail.com", "displayName": "田中太郎", "status": "active" },
+    { "email": "newuser@gmail.com", "status": "pending" }
+  ]
+}
+```
 
 ### インデックス
 
 | フィールド | 方向 | 用途 |
 |-----------|------|------|
 | `shortname` | ASC | shortname によるサイト検索 (ユニーク制約はアプリ層で担保) |
-| `ownerUid` | ASC | オーナー別サイト一覧 |
 
 ---
 
@@ -96,7 +116,71 @@ Firestore データベース設計。Nucleus CMS の設計思想 (blog/item/cont
 
 ---
 
-## 3. items サブコレクション
+## 3. templates サブコレクション
+
+コンテンツタイプに紐づく表示テンプレート。embed.jsでサーバーサイドレンダリング(SSR)に使用。
+Nucleusの `template` テーブルに相当。
+
+- **コレクションパス:** `/sites/{siteId}/contentTypes/{contentTypeId}/templates`
+- **ドキュメントID:** 自動生成ID
+
+### フィールド
+
+| フィールド名 | データ型 | 必須 | 説明 | Nucleus対応 |
+|-------------|----------|------|------|-------------|
+| `name` | `string` | ○ | テンプレート名 (例: "お知らせ一覧", "ティッカー") | `tdname` |
+| `shortname` | `string` | ○ | API用識別名 (英数字ハイフン, 例: "list", "ticker") | — |
+| `body` | `string` | ○ | HandlebarsテンプレートHTML | `tparttype` (BODY等) |
+| `isDefault` | `boolean` | ○ | デフォルトテンプレートか | — |
+| `createdAt` | `timestamp` | ○ | 作成日時 | — |
+| `updatedAt` | `timestamp` | ○ | 更新日時 | — |
+
+### テンプレートエンジン
+
+- **Handlebars** を使用（Mustache互換 + `{{#if}}`, `{{#each}}`, `{{#unless}}`, `{{#with}}`, カスタムヘルパー対応）
+- サーバーサイド(Node.js)でレンダリングし、完成HTMLをembed.jsに返却
+
+### 利用可能な変数
+
+| 変数 | 型 | 説明 |
+|------|------|------|
+| `items` | `array` | 条件にマッチした記事リスト。各要素は `title`, `body`, `fields.*`, `createdAt`, `updatedAt` 等全項目 |
+| `item` | `object` | 先頭1件の記事。単一記事表示用のショートカット |
+
+※ 条件にマッチする記事が0件の場合、embed.jsは何も出力しない
+
+### セキュリティ
+
+- テンプレート保存時に `<script>` タグ・`on*` イベント属性をサニタイズ除去
+- `{{{body}}}` (エスケープなし出力) は記事本文のHTML表示用に許可
+
+### テンプレート例
+
+**お知らせ一覧:**
+```handlebars
+{{#each items}}
+<div class="news-item">
+  <time datetime="{{createdAt}}">{{formatDate createdAt}}</time>
+  <h3>{{title}}</h3>
+  <p>{{fields.text0}}</p>
+  {{#if fields.flag0}}<span class="badge-urgent">緊急</span>{{/if}}
+</div>
+{{/each}}
+```
+
+**単一ページ:**
+```handlebars
+{{#with item}}
+<article>
+  <h2>{{title}}</h2>
+  <div>{{{body}}}</div>
+</article>
+{{/with}}
+```
+
+---
+
+## 4. items サブコレクション
 
 記事データ。Nucleusの `item` テーブル + `plugin_myshowblogs` テーブルを統合。
 
@@ -162,9 +246,9 @@ Nucleusの `cmsnucleus_plugin_myshowblogs` テーブルが持っていた汎用�
 
 ---
 
-## 4. users コレクション
+## 5. users コレクション
 
-ユーザー管理。Nucleusの `member` + `team` テーブルを統合。
+ユーザープロフィール。権限情報は保持せず、Firebase Auth Custom Claims のみで管理。
 
 - **コレクションパス:** `/users`
 - **ドキュメントID:** Firebase Auth の `uid`
@@ -177,34 +261,38 @@ Nucleusの `cmsnucleus_plugin_myshowblogs` テーブルが持っていた汎用�
 | `email` | `string` | ○ | Gmailアドレス | `memail` |
 | `displayName` | `string` | — | 表示名 | `mrealname` |
 | `photoURL` | `string` | — | Googleプロフィール画像URL | — |
-| `role` | `string` | ○ | `"superadmin"` / `"owner"` / `"editor"` | `madmin` + team |
-| `siteIds` | `array of string` | ○ | 担当サイトのドキュメントID配列 | `cmsnucleus_team` |
 | `createdAt` | `timestamp` | ○ | アカウント作成日時 | — |
 | `updatedAt` | `timestamp` | ○ | 最終更新日時 | — |
 
+※ 権限情報 (`role`, `siteIds`) は一切保持しない。Firebase Auth Custom Claims が唯一の権限ソース。
+
+### Firebase Auth Custom Claims（権限管理の唯一のソース）
+
+**admin（スーパー管理者）:**
+```json
+{ "role": "admin" }
+```
+- CLIで付与（`firebase functions:shell` 等で `setCustomUserClaims`）
+- 全サイトにアクセス可、siteIds不要
+
+**siteadmin（サイト管理者）:**
+```json
+{ "role": "siteadmin", "siteIds": ["siteId1", "siteId2"] }
+```
+- 招待フローで自動付与
+- `siteIds` に含まれるサイトのみ操作可能
+- 複数サイトの紐づけ可能（Claims上限 1000バイト、実用上数十サイトまで可）
+
 ### ロール定義
 
-| ロール | 権限 | Nucleus対応 |
-|--------|------|-------------|
-| `superadmin` | 全サイト管理、サイト作成/削除、owner招待 | `madmin=1` |
-| `owner` | 自サイトのコンテンツタイプ・記事管理、editor招待 | `tadmin=1` (team内) |
-| `editor` | 自サイトの記事作成・編集のみ | `tadmin=0` (team内) |
-
-### Firebase Auth Custom Claims
-
-```json
-{
-  "role": "owner",
-  "siteIds": ["siteId1", "siteId2"]
-}
-```
-
-Firestoreの `users` ドキュメントと Custom Claims の両方に `role` / `siteIds` を持つ。
-Custom Claims はセッション検証時の高速判定用、Firestoreは管理画面での表示・編集用。
+| ロール | 権限 | 付与方法 | Nucleus対応 |
+|--------|------|----------|-------------|
+| `admin` | 全サイト管理、サイト作成/削除、siteadmin招待 | CLIでCustom Claims設定 | `madmin=1` |
+| `siteadmin` | 紐づくサイトのコンテンツタイプ・記事管理 | 招待フローでCustom Claims設定 | `tadmin` (team内) |
 
 ---
 
-## 5. Firebase Storage 構造
+## 6. Firebase Storage 構造
 
 ```
 sites/
@@ -223,13 +311,14 @@ sites/
 match /sites/{siteId}/{allPaths=**} {
   allow read: if true;                              // 公開情報のため誰でも読める
   allow write: if request.auth != null
-    && request.auth.token.siteIds.hasAny([siteId]); // 当該サイトの担当者のみ書込み
+    && (request.auth.token.role == 'admin'           // adminは全サイト書込み可
+        || request.auth.token.siteIds.hasAny([siteId])); // siteadminは担当サイトのみ
 }
 ```
 
 ---
 
-## 6. Nucleus → Firestore フィールドマッピング早見表
+## 7. Nucleus → Firestore フィールドマッピング早見表
 
 ### item テーブル
 
@@ -260,7 +349,7 @@ match /sites/{siteId}/{allPaths=**} {
 
 ---
 
-## 7. 廃止するNucleusテーブル
+## 8. 廃止するNucleusテーブル
 
 | テーブル | 理由 |
 |---------|------|
@@ -274,8 +363,8 @@ match /sites/{siteId}/{allPaths=**} {
 | `cmsnucleus_plugin_event` | 不要 |
 | `cmsnucleus_plugin_option` | contentTypes.fieldLabels で代替 |
 | `cmsnucleus_plugin_option_desc` | contentTypes.fieldLabels で代替 |
-| `cmsnucleus_skin` | 不要 (テンプレート機構廃止) |
-| `cmsnucleus_skin_desc` | 不要 |
-| `cmsnucleus_template` | 不要 |
-| `cmsnucleus_template_desc` | 不要 |
+| `cmsnucleus_skin` | templates サブコレクションで代替 |
+| `cmsnucleus_skin_desc` | templates サブコレクションで代替 |
+| `cmsnucleus_template` | templates サブコレクションで代替 |
+| `cmsnucleus_template_desc` | templates サブコレクションで代替 |
 | `cmsnucleus_tickets` | 不要 (Firebase Auth Session) |
