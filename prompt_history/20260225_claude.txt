@@ -1,0 +1,402 @@
+
+User: ドキュメント(blueprintとdatabase-schema）の修正前に相談。
+権限は2つでよくて、firebase側(Custom Claims)だけで持ちたい（dbに権限保持したくない）
+adminはスーパー管理者（homepageと同じでcliで権限つける）
+siteadminがサイト管理者（自分と紐づくサイトだけいじれる。複数サイト紐づけ可能）
+siteadminの作成フロー案）
+admin(スーパー管理者)が管理画面でサイトを作成、サイトを選択後、対象者のGmailを入力して、siteadmin登録URLを作成。（jwtで期限とメールとサイトIDをもつ）
+siteadmin登録URLを案内して、そこでgoogleログイン、ログイン後、jwtのメールと一致していれば、authのCustom Claimsに登録（サイトIDリストもCustom Claimsにもてる？）
+
+
+GitHub Copilot: 
+
+   
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#1-1), lines 1 to 60
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#1-1), lines 1 to 80
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#80-80), lines 80 to 160
+
+Searched for regex `user|role|admin|owner|member|claims|権限|ロール|認証|認可` (`**/docs/**`), 20 results
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#160-160), lines 160 to 230
+
+現状の設計を把握しました。提案についてフィードバックします。
+
+---
+
+**方針は良いと思います。**いくつかポイントを整理します。
+
+### Custom Claims にサイトIDリストを持てるか？
+
+**持てます。ただし制約あり:**
+- Custom Claims の上限は **1000バイト**
+- Firestoreの自動生成ID（20文字）の場合、JSON構造込みで **約30〜40サイト** が上限
+- 年間20サイト未満の想定なら十分収まる
+
+### 提案への所感と整理
+
+| 項目 | 現状の設計 | 提案後 |
+|------|-----------|--------|
+| ロール | 3種 (`superadmin`/`owner`/`editor`) | 2種 (`admin`/`siteadmin`) |
+| 権限の保存先 | Firestore `users` + Custom Claims（二重持ち） | **Custom Claimsのみ** |
+| DB `users` コレクション | role, siteIds等を保持 | **不要（削除 or プロフィール用に縮小）** |
+| `sites` の `ownerUid`/`ownerEmail` | サイトに紐づくオーナー情報 | **不要（Claims側で逆引き）** |
+
+### 1点確認したいこと
+
+`users` コレクション自体を **完全に廃止** してよいですか？ それとも表示名・プロフィール画像など最低限のユーザー情報は残しますか？
+
+考えられる選択肢:
+- **A) 完全廃止** — Firebase Auth の `displayName` / `photoURL` だけで十分（Admin SDKで取得可能）
+- **B) 最小限残す** — `users/{uid}` に `displayName`, `email`, `createdAt` のみ（権限情報なし）
+
+adminが管理画面で「このサイトのsiteadmin一覧」を表示する場面を考えると、Custom Claimsだけだと「全Auth userを走査して該当siteIdを持つユーザーを探す」必要があり、やや非効率です。
+
+**対案:** `sites` ドキュメントに `adminUsers: [{uid, email, displayName}]` のような配列を持てば、usersコレクション不要でサイト単位の管理者一覧も取れます。
+
+### siteadmin登録フローについて
+
+提案のJWTフローは妥当です。流れを整理すると:
+
+```
+1. admin: 管理画面でサイト選択 → Gmail入力 → 招待トークン生成
+   JWT payload: { siteId, email, exp }
+   
+2. 招待URLを対象者に送付
+   例: https://example.com/invite?token=xxx
+
+3. siteadmin候補者: URL開く → Googleログイン
+   
+4. サーバー側:
+   - JWTを検証（期限・署名）
+   - ログイン中のGmail === JWT内のemail を確認
+   - Admin SDK で Custom Claims を更新:
+     { role: "siteadmin", siteIds: [...既存, newSiteId] }
+   - (必要なら) sites ドキュメントの adminUsers 配列にも追加
+```
+
+この方向で進めてよければドキュメントを修正します。`users` コレクションをどうするかだけ教えてください。
+
+User: users コレクションは残します。role(紐づくサイトリスト含む)はCustom Claims （１００バイトで十分）
+対案: sites ドキュメントに adminUsers: [{uid, email, displayName}] のような配列を持つ→賛成（JWTフローURL作成時にも作ってもよいかも→未登録、登録済のステータスつき）　ドキュメント（blueprintとDB設計）の修正をお願いします。
+
+GitHub Copilot: 
+
+  
+
+Created 4 todos
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#60-60), lines 60 to 160
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#160-160), lines 160 to 282
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#160-160), lines 160 to 308
+
+Starting: *blueprint.md 権限設計を修正* (2/4)
+
+Replacing 21 lines with 48 lines in [](file:///home/workspace/newcleus/docs/blueprint.md)
+
+
+```
+
+```
+
+
+Starting: *database-schema.md 修正* (3/4)
+
+Replacing 52 lines with 75 lines in [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+
+
+Starting: *矛盾チェック* (4/4)
+
+残りの矛盾がないか最終チェックします。 
+
+Searched for regex `superadmin|owner|editor|ownerUid|ownerEmail|3\u7a2e|\u30aa\u30fc\u30ca\u30fc` (`**/docs/**`), 2 results
+
+コアコンセプト図の `owner:` ラベルも修正します。 
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#12-12), lines 12 to 26
+
+Replacing 1 lines with 1 lines in [](file:///home/workspace/newcleus/docs/blueprint.md)
+
+
+```
+
+```
+Storage Rules も `siteIds` を Custom Claims から参照しているので問題ないですが、表現を確認します。  
+
+Searched for regex `request\.auth\.token|siteIds|authorUid` (`**/docs/**`), 14 results
+
+Storage Rules で `request.auth.token.siteIds` を参照しているのはCustom Claimsから読むので正しい。`authorUid` は記事の作成者記録用で権限管理とは別なのでそのまま。
+
+もう一つ、Storage Rulesで admin ロールのwriteアクセスも考慮すべきです。  
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#238-238), lines 238 to 254
+
+Using "Replace String in File"
+
+Replacing 5 lines with 6 lines in [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+最終的な整合性を確認します。   
+
+Searched for regex `superadmin|\"owner\"|\"editor\"|ownerUid|ownerEmail|3\u7a2e` (`**/docs/**`), no results
+
+旧用語は完全に排除されています。   
+
+Completed: *矛盾チェック* (4/4)
+
+修正完了しました。変更サマリ:
+
+### blueprint.md
+- ロールを `admin` / `siteadmin` の **2種のみ** に変更
+- 権限は **Custom Claimsのみ管理**（DBに権限情報を持たない）を明記
+- `admin` はCLI付与、`siteadmin` はJWT招待フローで付与
+- **5.1.1 siteadmin招待フロー** を新規追加（JWT生成 → URL案内 → Googleログイン → Claims設定）
+- サイト管理セクション: siteadmin招待・一覧表示を追加
+- コアコンセプト図の `owner` → `siteadmin`、`superadmin` → `admin` に統一
+
+### database-schema.md
+- `sites` から `ownerUid` / `ownerEmail` を削除
+- `sites` に **`adminUsers` 配列**を追加（`{uid, email, displayName, status}` 構造、pending/active ステータス付き）
+- `users` から `role` / `siteIds` を削除（プロフィール情報のみ保持）
+- **Custom Claims セクション** を全面書き直し（admin / siteadmin それぞれの構造を明記）
+- **ロール定義テーブル** を2ロールに変更、付与方法カラムを追加
+- **Storage Rules** に admin ロールの全サイト書込み許可を追加
+
+Made changes.
+
+User: ありがとう。もう一点あります。
+embed.js用にcontentsTypeに紐づけてhtmlテンプレ（複数）を管理画面から編集可能にしたい。
+この場合、templateのコレクションが追加になる。
+利用可能な変数はitems（リスト）とitem（先頭1アイテム）。いずれも、contentsTypeに紐づく全ての項目を表示できる。
+条件にマッチするのが1アイテムの場合、itemsは一つのみ。マッチするアイテムがない場合、emded.jsは何も出力しない。
+修正前にアドバイスがほしいです。
+
+
+
+GitHub Copilot: 
+
+   
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#160-160), lines 160 to 235
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#46-46), lines 46 to 100
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#235-235), lines 235 to 335
+
+設計を把握しました。アドバイスをまとめます。
+
+---
+
+## テンプレート設計のアドバイス
+
+### 1. コレクション配置: サブコレクション vs contentTypesドキュメント内
+
+**案A) サブコレクション `sites/{siteId}/contentTypes/{ctId}/templates`**
+- テンプレートが多い場合スケールする
+- ただしembed.jsの1リクエストで contentType + templates を一度に取れない（2回読みが必要）
+
+**案B) contentTypesドキュメント内の `templates` マップ/配列** (推奨)
+- contentType取得時にテンプレートも一緒に取れる（1ドキュメント読み）
+- embed.jsがサーバー側でレンダリングする際、contentType 1件読みで完結
+- Firestoreの1ドキュメント上限は1MB。HTMLテンプレートは通常数KB程度なので問題なし
+- テンプレートの数は1 contentTypeあたり数個が想定なので配列で十分
+
+→ ただし管理画面でテンプレートだけを個別CRUD操作したい場合はサブコレクションの方が明快。**どちらが良いですか？**
+
+### 2. テンプレートエンジンの選定
+
+テンプレート内で `items` / `item` の変数展開が必要なので、軽量テンプレートエンジンが必要です。
+
+| エンジン | サイズ | 特徴 |
+|---------|-------|------|
+| **Mustache** | ~3KB | ロジックレス。`{{title}}`, `{{#items}}...{{/items}}`。安全性高い |
+| **Handlebars** | ~16KB | Mustache互換 + helpers (`{{#if}}`, `{{#each}}`)。より表現力あり |
+| 自前の `${変数}` 置換 | 0KB | 最小だがループ・条件分岐ができない |
+
+**Mustacheを推奨します。** 理由:
+- ロジックレスなのでテンプレートにXSSを仕込みにくい（`{{{raw}}}` を禁止すれば完全）
+- リスト展開 `{{#items}}...{{/items}}` で一覧表示も単一表示も対応可能
+- サーバーサイド（Node.js）でレンダリングしてembed.jsにHTMLを返すので、テンプレートエンジンのバンドルサイズは関係なし
+
+### 3. embed.js の動作変更
+
+現状の設計:
+```
+embed.js → API呼出 → JSON取得 → クライアント側でHTML描画
+```
+
+テンプレート導入後:
+```
+embed.js → API呼出 → サーバー側でテンプレート適用済みHTML取得 → target要素にinnerHTML
+```
+
+**ポイント:** テンプレートをサーバーサイドレンダリング(SSR)にすれば、embed.jsは超軽量（fetchしてinnerHTMLするだけ）になり、利用者サイトのパフォーマンスも向上します。
+
+embed.jsのパラメータに `&template={templateName}` を追加する形になります。
+
+### 4. テンプレートの利用可能変数
+
+```mustache
+{{!-- リスト表示 --}}
+{{#items}}
+  <div class="item">
+    <h3>{{title}}</h3>
+    <p>{{fields.text0}}</p>
+    <img src="{{fields.file0}}" />
+    {{#fields.flag0}}<span class="badge">おすすめ</span>{{/fields.flag0}}
+  </div>
+{{/items}}
+
+{{!-- 先頭1件だけ使いたい場合 --}}
+{{#item}}
+  <h2>{{title}}</h2>
+  <div>{{{body}}}</div>
+{{/item}}
+```
+
+### 5. セキュリティ上の懸念
+
+テンプレートに任意HTMLを書けるようにするため:
+- `{{{三重中括弧}}}` (HTMLエスケープなし) は `body` フィールドのみ許可するのが理想
+- テンプレート内で `<script>` タグを許可するか？ → 利用者サイトに埋め込むので**許可しない**方が安全
+- テンプレート保存時にサニタイズ（script/onイベント属性除去）するか、サーバーレンダリング後にサニタイズするか
+
+### まとめ: 推奨構成
+
+| 項目 | 推奨 |
+|------|------|
+| コレクション配置 | contentTypesのサブコレクション or ドキュメント内配列（要確認） |
+| テンプレートエンジン | Mustache |
+| レンダリング | サーバーサイド（API側でテンプレート適用 → HTML返却） |
+| 変数 | `items` (配列), `item` (先頭1件), 各項目の全フィールド |
+| embed.js追加パラメータ | `&template={templateName}` |
+| セキュリティ | テンプレート保存時に `<script>` / `on*` 属性をサニタイズ |
+
+コレクション配置の方針を教えていただければ、ドキュメント修正に進みます。
+
+User: コレクションは案A)がいいです。テンプレートエンジンは表現力が高いもの（siteadminがテンプレート構文覚えればいろいろ融通がきくようにしたい）　ドキュメント修正後、　先ほどの件と合わせて日本語コミットログ（詳細）つきでpushまでお願いします！
+
+GitHub Copilot: 
+
+  
+
+Created 4 todos
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#95-95), lines 95 to 115
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#1-1), lines 1 to 20
+
+Read [](file:///home/workspace/newcleus/docs/blueprint.md#240-240), lines 240 to 260
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#95-95), lines 95 to 125
+
+全体を把握できました。修正を進めます。 
+
+Replacing 26 lines with 72 lines in [](file:///home/workspace/newcleus/docs/blueprint.md)
+
+
+```
+
+```
+
+
+Starting: *database-schema.md テンプレート追加* (2/4)
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#112-112), lines 112 to 120
+
+Replacing 5 lines with 70 lines in [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+DB設計書のセクション番号がずれたので修正します。   
+
+Searched for regex `^## [0-9]+\.` (`**/docs/database-schema.md`), 8 results
+
+usersが「4」のままなので「5」に、以降を繰り上げます。   
+
+Replacing 4 lines with 4 lines in [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+
+
+Starting: *矛盾チェック* (3/4)
+
+廃止テーブルに`cmsnucleus_template`が含まれていないか確認します。    
+
+Searched for regex `template.*\u5ec3\u6b62|\u5ec3\u6b62.*template|cmsnucleus_template` (`**/docs/database-schema.md`), 3 results
+
+Read [](file:///home/workspace/newcleus/docs/database-schema.md#363-363), lines 363 to 371
+
+`cmsnucleus_template` と `cmsnucleus_skin` は廃止ではなく templates サブコレクションに引き継がれたので修正します。    
+
+Replacing 4 lines with 4 lines in [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+その他の整合性を確認します。      
+
+Searched for regex `\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u6a5f\u69cb\u5ec3\u6b62|CSS/JS \u306b\u59d4\u306d\u308b|JSON\u53d6\u5f97` (`**/docs/**`), no results
+
+旧表現は全て除去済みです。バージョン番号も上げます。    
+
+Replacing 2 lines with 2 lines in [](file:///home/workspace/newcleus/docs/blueprint.md), [](file:///home/workspace/newcleus/docs/database-schema.md)
+
+
+```
+
+```
+
+```
+
+```
+
+
+Starting: *コミット＆push* (4/4)
+
+Ran terminal command:  cd /home/workspace/newcleus && git add -A && git status
+
+Ran terminal command:  cd /home/workspace/newcleus && git commit -m "v0.0.3: 権限設計変更 + テンプレート機能追加
+
+■ 権限設計の変更
+- ロールを admin / siteadmin の2種のみに簡素化（editor廃止）
+- 権限管理は Firebase Auth Custom Claims のみ（DBに権限情報を持たない）
+- admin: CLIで付与、全サイトアクセス可
+- siteadmin: JWT招待フローで付与、紐づくサイトのみ操作可（複数サイト可）
+- siteadmin招待フロー追加（JWT生成→URL案内→Googleログイン→Claims自動設定）
+- sites コレクションに adminUsers 配列追加（pending/active ステータス管理）
+- users コレクションから role/siteIds 削除（プロフィール情報のみ保持）
+
+■ テンプレート機能の追加
+- templates サブコレクション追加（contentTypes/{ctId}/templates）
+- テンプレートエンジン: Handlebars（if/each/unless/with/カスタムヘルパー対応）
+- embed.js をサーバーサイドレンダリング(SSR)に変更
+- embed.js パラメータに template={templateName} 追加
+- 利用可能変数: items（リスト）、item（先頭1件）
+- マッチ0件時は何も出力しない仕様
+- テンプレート保存時に script/onイベント属性をサニタイズ
+- Nucleus廃止テーブルのうち skin/template 系を「templatesで代替」に訂正" && git push origin main
+
+Completed: *コミット＆push* (4/4)
+
+push完了しました。v0.0.3 で権限設計変更とテンプレート機能追加の両方を反映済みです。
+
+Made changes.

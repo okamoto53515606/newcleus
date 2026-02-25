@@ -60,6 +60,7 @@
 │  公開API (Next.js API Routes)                              │
 │  GET /api/v1/sites/{siteId}/items  → JSON                  │
 │  GET /api/v1/sites/{siteId}/items/{itemId}  → JSON         │
+│  GET /api/v1/sites/{siteId}/render → テンプレート適用済HTML  │
 │  GET /api/v1/sites/{siteId}/embed.js → scriptタグ埋め込みJS│
 │  - CORSはサイト別 allowedOrigins で動的制御                │
 │  - GET only / パラメータは英数字ハイフンアンダーバーのみ    │
@@ -252,6 +253,14 @@ GET /api/v1/sites/{siteId}/embed.js
   &template={templateName}  テンプレート名 (任意、未指定時はデフォルトテンプレート)
   &limit={number}           表示件数 (デフォルト5)
   &flag0=1                  汎用フラグフィルタ (任意)
+
+GET /api/v1/sites/{siteId}/render
+  ?contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
+  &template={templateName}  テンプレート名 (任意、未指定時はデフォルトテンプレート)
+  &limit={number}           取得件数 (デフォルト10)
+  &flag0=1                  汎用フラグフィルタ (任意)
+  → Content-Type: text/html でテンプレート適用済HTMLを返却
+  → マッチする記事が0件の場合、空のHTMLを返却
 ```
 
 ### レスポンス (JSON)
@@ -299,6 +308,40 @@ GET /api/v1/sites/{siteId}/embed.js
 ```
 
 embed.js自体は軽量（fetch + innerHTMLのみ）。テンプレートレンダリングはサーバーサイド(SSR)で完結。
+
+### 利用方法の3段階
+
+| 方法 | SEO | 難易度 | 用途 |
+|------|-----|--------|------|
+| `embed.js` (script埋め込み) | × | ★☆☆ NoCode | お知らせ、バナー、ティッカー等 |
+| `/render` (HTML直接取得) | ○ | ★★☆ PHP1行 | SEO重要なコンテンツ |
+| `/items` (JSON API) | ○ | ★★★ 自前描画 | 完全カスタム表示 |
+
+**利用例:**
+
+```html
+<!-- embed.js: NoCodeで静的サイトに埋め込み -->
+<div id="cms-news"></div>
+<script src="https://newcleus.okamomedia.tokyo/api/v1/sites/{siteId}/embed.js?contentType=news&template=list"></script>
+```
+
+```php
+<?php
+// /render: SEO対応がPHP1行で完結
+echo file_get_contents('https://newcleus.okamomedia.tokyo/api/v1/sites/{siteId}/render?contentType=news&template=list');
+?>
+```
+
+```php
+<?php
+// /items: JSONを取得して自由に描画
+$json = file_get_contents('https://newcleus.okamomedia.tokyo/api/v1/sites/{siteId}/items?contentType=news');
+$data = json_decode($json, true);
+foreach ($data['items'] as $item) {
+    echo "<h3>{$item['title']}</h3>";
+}
+?>
+```
 
 ---
 
