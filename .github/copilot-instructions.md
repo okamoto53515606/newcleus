@@ -50,6 +50,8 @@
 
 - **Lambda Web Adapter の ENTRYPOINT 問題**: `public.ecr.aws/lambda/nodejs:20` を base image にすると `/lambda-entrypoint.sh` が `CMD ["node","server.js"]` を handler 形式として拒否し `Runtime.ExitError` になる。`node:20-alpine` を base image にし、adapter を `/opt/extensions/lambda-adapter` に配置（ENTRYPOINT 指定なし）で解決。
 - **setup1b のリンク**: 「次のステップへ」は `/setup1c-iam`（`/setup1c` は存在しない）
+- **【未確認・要検証】Cognito App Client の readAttributes 未設定問題**: `sites/page.tsx` の「新規サイト」ボタンが表示されない（`user.role` が undefined になる）事象を確認。原因は Cognito App Client に `custom:role` が readAttributes として設定されていない可能性。確認方法: ① ログイン状態で `/api/admin/auth/me` にアクセスして `role` が null か確認 ② Cognito コンソール → App Clients → `newcleus-admin-client` → 属性の読み取り権限に `custom:role` / `custom:siteIds` がチェックされているか確認。チェックが外れていれば AWS コンソール上で有効化 → ログアウト・再ログインで解消する見込み。
+- **【未確認】CognitoStack callbackUrls に CloudFront URL 未登録**: CDK の `callbackUrls` に `https://d1sax4j5hw821p.cloudfront.net/api/admin/auth/callback` が含まれていないため、CloudFront 経由でのログインが不可能。CognitoStack 再デプロイ時に追加が必要。
 
 ## 記述方針（必須）
 

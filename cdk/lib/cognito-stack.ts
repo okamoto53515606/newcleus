@@ -63,10 +63,14 @@ export class CognitoStack extends cdk.Stack {
         callbackUrls: [
           'http://localhost:3000/api/admin/auth/callback',  // setup アプリ（ローカル）
           'http://localhost:9002/api/admin/auth/callback',  // 本番アプリ（ローカル開発）
+          // why: Lambda は Function URL ではなく CloudFront 経由で公開するため、
+          //      本番の callback URL は CloudFront ドメインにする必要がある。
+          'https://d1sax4j5hw821p.cloudfront.net/api/admin/auth/callback',
         ],
         logoutUrls: [
           'http://localhost:3000/admin/login',
           'http://localhost:9002/admin/login',
+          'https://d1sax4j5hw821p.cloudfront.net/admin/login',
         ],
       },
       // ID トークンに custom:role, custom:siteIds を含める
