@@ -51,7 +51,8 @@
   **次回調査手順**: `src/lib/admin-auth.ts` にデバッグログを追加済み（`logger.info('[AdminAuth DEBUG] JWT payload keys: ...')`）。ローカル（localhost:9002）でログインして `npm run dev` のコンソール出力に `JWT payload keys` が何を含むか確認する。あわせて aws-knowledge-mcp で「Cognito ID token custom attributes not included authorization code grant」を調査する。
 
 okamoからclaudeへ：コンソール出力結果です。
- Server  [AdminAuth DEBUG] JWT payload keys: at_hash, sub, email_verified, iss, cognito:username, origin_jti, aud, token_use, auth_time, exp, iat, jti, email forward-logs-shared.ts:95:22
+IDトークンからsubは取得できており、subは改ざんチェックできるのでsubは改ざん不能。lambda側でcognito APIを呼び出し、subにひもづくcustom:xxx属性を取得すれば、こちらも改ざん不能のはず。このroleやsiteIdsのチェックは/admin/xxxだけでなく、/api/admin/xxx でも必須。ご意見を下さい。
+Server  [AdminAuth DEBUG] JWT payload keys: at_hash, sub, email_verified, iss, cognito:username, origin_jti, aud, token_use, auth_time, exp, iat, jti, email forward-logs-shared.ts:95:22
  Server  [AdminAuth DEBUG] custom:role = undefined forward-logs-shared.ts:95:22
 
 #### 【Step 3】Phase 3 の実装開始
