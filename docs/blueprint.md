@@ -88,9 +88,17 @@
 - 記事公開ページ (`src/app/articles/`)
 - Markdown関連 (`react-markdown`, `remark-gfm`)
 - setup2系とsetup3系とopsメニューは不要
-- 以下の環境変数
-  - CLOUDFRONT_SITE_DOMAIN
-  - xxx
+- 以下の環境変数を削除（環境変数利用コードも修正）
+GEMINI_API_KEY=""
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+STRIPE_TAX_RATES=""
+CSP_REPORT_ONLY=""
+SESSION_DURATION_HOURS=""
+STRIPE_WEBHOOK_PROXY_URL=""
+CLOUDFRONT_DEFAULT_DOMAIN=""
 
 ---
 
