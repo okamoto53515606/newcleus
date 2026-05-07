@@ -69,7 +69,8 @@ Dockerfile の ENTRYPOINT 問題を修正済み（`public.ecr.aws/lambda/nodejs:
 
 - **Lambda Web Adapter の ENTRYPOINT 問題**: `public.ecr.aws/lambda/nodejs:20` を base image にすると `/lambda-entrypoint.sh` が `CMD ["node","server.js"]` を handler 形式として拒否し `Runtime.ExitError` になる。`node:20-alpine` を base image にし、adapter を `/opt/extensions/lambda-adapter` に配置（ENTRYPOINT 指定なし）で解決。
 - **setup1b のリンク**: 「次のステップへ」は `/setup1c-iam`（`/setup1c` は存在しない）
-- **【確認済み・要修正】Cognito App Client の readAttributes 未設定問題**: `/api/admin/auth/me` が `{"sub":"...","email":"..."}` のみを返し `role` が含まれないことを実証確認（2026-05-08）。Cognito App Client `newcleus-admin-client` の「属性の読み取り権限」に `custom:role` / `custom:siteIds` が設定されていないため ID トークンにカスタム属性が含まれない。対処: AWS コンソールで読み取り権限を手動有効化 → 再ログイン、または CognitoStack 再デプロイ。
+- **【確認済み・要修正】Cognito App Client の readAttributes 未設定問題**: `/api/admin/auth/me` が `{"sub":"...","email":"..."}` のみを返し `role` が含まれないことを実証確認（2026-05-08）。AWS コンソールで App Client の「属性の読み取り権限」を確認したところ `custom:role` / `custom:siteIds` の読み取りは**チェック済み**だった。つまり App Client の設定は正しいが、ID トークンに `custom:role` クレームが含まれていない別の原因がある。  
+  **次回調査手順**: `src/lib/admin-auth.ts` にデバッグログを追加済み（`logger.info('[AdminAuth DEBUG] JWT payload keys: ...')`）。ローカル（localhost:9002）でログインして `npm run dev` のコンソール出力に `JWT payload keys` が何を含むか確認する。あわせて aws-knowledge-mcp で「Cognito ID token custom attributes not included authorization code grant」を調査する。
 - **【確認済み・要修正】CognitoStack callbackUrls に CloudFront URL 未登録**: CDK コードは修正済み（d548587）。CognitoStack 再デプロイで本番ログインが有効化される。
 
 ## 記述方針（必須）

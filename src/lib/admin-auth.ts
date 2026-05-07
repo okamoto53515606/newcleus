@@ -81,6 +81,12 @@ export async function getAdminUser(): Promise<AdminUser> {
       audience: process.env.COGNITO_CLIENT_ID,
     });
 
+    // DEBUG: ID トークンに含まれる全クレームをログ出力
+    // why: custom:role が /api/admin/auth/me で返らない問題の調査用。
+    //      原因が判明したらこの行は削除する。
+    logger.info(`[AdminAuth DEBUG] JWT payload keys: ${Object.keys(payload).join(', ')}`);
+    logger.info(`[AdminAuth DEBUG] custom:role = ${String(payload['custom:role'])}`);
+
     return {
       isAuthenticated: true,
       email: payload.email as string | undefined,
