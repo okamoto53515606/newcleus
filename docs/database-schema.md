@@ -2,6 +2,8 @@
 
 Firestore データベース設計。Nucleus CMS の設計思想 (blog/item/contentType/member/team/MyShowBlogs汎用フィールド) を Firestore ネイティブに翻訳したもの。
 
+**okamoからclaudeへ: firestoreからdynamo dbに変更して下さい。**
+
 ---
 
 ## コレクション一覧
