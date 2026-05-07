@@ -32,7 +32,7 @@
 
 - **想定規模:** 年間20サイト未満
 - **旧資産:** 20年前のNucleus CMS（PHP）の設計思想・DB設計 + AWSベースの個人メディア「homepage-v2」のコード資産
-- **新技術スタック:** Next.js (TypeScript) + AWS（ homepage/docs/blueprint_v2.md を参照）
+- **新技術スタック:** Next.js (TypeScript) + AWS（ .sample-files/homepage/docs/blueprint_v2.md を参照）
 
 ---
 
@@ -257,7 +257,7 @@ GET /api/v1/sites/{siteId}/render
       "contentType": { "id": "xxx", "name": "お知らせ" },
       "fields": {
         "text0": "概要テキスト",
-        "file0": "https://storage.googleapis.com/.../image.jpg",
+        "file0": "https://xxx.cloudfront.net/.../image.jpg",
         "flag0": true,
         "date0": "2026-02-21",
         "num0": 100
