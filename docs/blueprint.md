@@ -1,4 +1,4 @@
-# newcleus — Blueprint v0.0.3
+# newcleus — Blueprint v0.0.4
 
 > 名前の由来: "new" + "Nucleus CMS"。 20年前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
 
@@ -25,14 +25,14 @@
 ```
 
 - Nucleusでは `blog` テーブルがこのテナント単位だった（1 blog = 1利用者の記事リスト）
-- 新CMSでは Firestore の `sites/{siteId}` コレクションがこれに相当する
-- 利用者追加 = サイト作成 + Googleアカウント紐づけ で完了
+- 新CMSでは DynamoDB の `sites/{siteId}` コレクションがこれに相当する
+- 利用者追加 = サイト作成 + Cognitoアカウント紐づけ で完了
 
 ### 基本情報
 
 - **想定規模:** 年間20サイト未満
-- **旧資産:** 20年前のNucleus CMS（PHP）の設計思想・DB設計 + 1ヵ月前のFirebase個人メディア「homepage」のコード資産
-- **新技術スタック:** Next.js (TypeScript) + Firebase (Firestore / Storage / Auth / App Hosting)
+- **旧資産:** 20年前のNucleus CMS（PHP）の設計思想・DB設計 + AWSベースの個人メディア「homepage-v2」のコード資産
+- **新技術スタック:** Next.js (TypeScript) + AWS（ homepage/docs/blueprint_v2.md を参照）
 
 ---
 
@@ -40,20 +40,20 @@
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  管理画面 (Next.js App Router)                             │
-│  - Firebase App Hosting でデプロイ                         │
-│  - Google OAuth ログイン (homepage資産から流用)             │
-│  - TinyMCE 7 Core エディタ (HTML出力)                      │
-│  - 画像: browser-image-compression → Firebase Storage      │
-│  - サーバーサイド: Admin SDK でFirestore読み書き            │
-│  - Firestore Security Rules は全拒否（Admin SDKのみ通す）  │
+│  管理画面 (Next.js App Router)          │
+│  - setup画面からCDK でデプロイ        │
+│  - Cognito提供ログイン画面を利用(homepage資産から流用)      │
+│  - TinyMCE 7 Core エディタ (HTML出力)    │
+│  - 画像: browser-image-compression → サーバサイドAPI（/api/xxx） → S3     │
+│  - サーバーサイド:  DynamoDB読み書き      │
+│  - サーバAPI（/api/xxx）をfetchで呼び出し  │
 └──────────────┬───────────────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────────────┐
-│  Firebase                                                 │
-│  Firestore: サイト・記事・コンテンツタイプ・ユーザー       │
-│  Storage:   画像ファイル (CDN配信)                         │
-│  Auth:      Google OAuth + Custom Claims (admin/siteadmin) │
+│  AWS                             │
+│  DynamoDB: サイト・記事・コンテンツタイプ・ユーザー   │
+│  S3:   画像ファイル (Cloudfront配信)     │
+│  Auth:     Cognito + custom:xxx属性(admin/siteadmin) │
 └──────────────┬───────────────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────────────┐
@@ -62,7 +62,7 @@
 │  GET /api/v1/sites/{siteId}/items/{itemId}  → JSON         │
 │  GET /api/v1/sites/{siteId}/render → テンプレート適用済HTML  │
 │  GET /api/v1/sites/{siteId}/embed.js → scriptタグ埋め込みJS│
-│  - CORSはサイト別 allowedOrigins で動的制御                │
+│  - CORSは全て許可               │
 │  - GET only / パラメータは英数字ハイフンアンダーバーのみ    │
 │  - POST受付なし / 全て公開情報                             │
 └─────────────────────────────────────────────────────────┘
@@ -76,25 +76,21 @@
 
 ## 3. homepageから流用する資産
 
-| 資産 | ファイル | 流用度 |
-|------|----------|--------|
-| Google OAuth フロー | `src/components/auth/auth-provider.tsx`, `src/app/api/auth/session/route.ts`, `src/lib/auth.ts` | そのまま |
-| Firebase Admin SDK 初期化 | `src/lib/firebase-admin.ts` | そのまま |
-| Client SDK 初期化 | `src/lib/firebase.ts` | そのまま |
-| 画像アップロード | `article-generator-form.tsx` 内の Storage upload 処理 | 抽出して共通化 |
-| HttpOnly Session Cookie | `/api/auth/session` | そのまま |
-| Admin Layout + ロールチェック | `src/app/admin/layout.tsx`, `src/lib/auth.ts` の `getUser()` | admin/siteadmin 2ロールに変更 |
-| apphosting.yaml | `apphosting.yaml` | そのまま |
-| Firestore Rules (全拒否) | `firestore.rules` | そのまま |
-
 ### 削除するもの (homepageにあってCMSに不要)
 
-- Stripe決済関連 (`src/lib/stripe.ts`, `src/app/api/stripe/`, `src/app/payment/`)
-- AI記事生成 (`src/ai/`, Genkit関連)
+- 独自ドメインは不要（xxx.cloudfront.netを使う）
+- WAF（WAFは不要）
+- Cogniteの2FAは不要
+- CDNのキャッシュはしない（/media/配下のみ1時間キャッシュ）
+- Stripe決済関連 / Googleログイン関連
+- AI記事生成 Genkit関連)
 - コメント機能 (`comments` コレクション, `src/components/comment-section.tsx`)
 - 記事公開ページ (`src/app/articles/`)
 - Markdown関連 (`react-markdown`, `remark-gfm`)
-- IP制限middleware（SaaSでは不要、ロールチェックで代替）
+- setup2系とsetup3系とopsメニューは不要
+- 以下の環境変数
+  - CLOUDFRONT_SITE_DOMAIN
+  - xxx
 
 ---
 
@@ -118,43 +114,21 @@
 
 ### 5.1 認証・権限管理
 
-- Googleログインのみ（独自パスワードなし）
+- Cogniteログインのみ
 - ロール: `admin`（スーパー管理者）/ `siteadmin`（サイト管理者）の **2種のみ**
-- **権限は Firebase Auth Custom Claims のみで管理（DBに権限情報を持たない）**
-- `admin` はCLIで付与（`firebase functions:shell` 等で `setCustomUserClaims`）
-- `siteadmin` は招待フローで付与（後述）
-- Custom Claims 構造: `{ role: "admin" | "siteadmin", siteIds: ["siteId1", ...] }`
+- **権限は Cognitoのcustom:属性 のみで管理（DBに権限情報を持たない）**
+- `admin` はsetup画面で付与
+- `siteadmin` は管理画面にadminでログインして付与
+- custom:属性の構造: `{ role: "admin" | "siteadmin", siteIds: ["siteId1", ...] }`
   - `admin` の場合 `siteIds` は不要（全サイトアクセス可）
   - `siteadmin` は `siteIds` に紐づくサイトのみ操作可能（複数サイト紐づけ可）
-
-### 5.1.1 siteadmin 招待フロー
-
-```
-1. admin: 管理画面でサイト選択 → 対象者のGmail入力 → 招待トークン生成
-   - JWT payload: { siteId, email, exp（有効期限） }
-   - sites/{siteId}.adminUsers に { email, status: "pending" } を追加
-
-2. 招待URLを対象者に案内
-   例: https://newcleus.okamomedia.tokyo/invite?token=xxx
-
-3. 対象者: URL開く → Googleログイン
-
-4. サーバー側:
-   - JWTを検証（期限・署名）
-   - ログイン中のGmail === JWT内のemail を確認
-   - Admin SDK で Custom Claims を更新:
-     { role: "siteadmin", siteIds: [...既存, newSiteId] }
-   - sites/{siteId}.adminUsers の該当ユーザーを更新:
-     { uid, email, displayName, status: "active" }
-   - users/{uid} ドキュメントを作成/更新
-```
 
 ### 5.2 サイト管理 (admin)
 
 - サイト作成: name, shortname, allowedOrigins
-- サイト作成時にFirestoreにドキュメント + 初期コンテンツタイプ自動生成
+- サイト作成時にDynamoDBに初期コンテンツタイプ自動生成
 - サイト一覧・編集・削除
-- siteadmin招待（サイト選択 → Gmail入力 → 招待URL生成）
+- siteadmin登録、削除（Cognito API）
 - サイト別のsiteadmin一覧表示（`sites/{siteId}.adminUsers` から取得）
 
 ### 5.3 コンテンツタイプ管理 (admin / siteadmin)
@@ -215,7 +189,7 @@
   - コンテンツタイプ選択
   - 汎用フィールド入力（コンテンツタイプのfieldLabels定義に基づき動的フォーム生成）
     - text: テキストエリア
-    - file: 画像アップロード（Firebase Storage）
+    - file: 画像アップロード（S3）
     - flag: チェックボックス
     - date: 日付ピッカー
     - num: 数値入力
@@ -226,8 +200,8 @@
 
 - TinyMCE 7 Core（MIT License）
 - 最低限の装飾: 太字、イタリック、リンク、箇条書き、見出し(h2-h4)
-- 画像挿入: アップロードボタン → browser-image-compression (1MB/1024px上限) → Firebase Storage → URL挿入
-- HTML出力をそのままFirestoreに保存
+- 画像挿入: アップロードボタン → browser-image-compression (1MB/1024px上限) → S3 → URL挿入（例: https://xxx.cloudfront.net/media/siteId/yyyymmddhhmmss-xxx.jpg）
+- HTML出力をそのままDynamoDBに保存
 - カスタムプラグイン不要、標準機能のみ
 
 ---
@@ -294,8 +268,7 @@ GET /api/v1/sites/{siteId}/render
 
 - GETのみ受付（POST/PUT/DELETE は404）
 - パラメータバリデーション: 英数字・ハイフン・アンダーバーのみ許可、それ以外は400
-- CORS: `sites/{siteId}.allowedOrigins` に登録されたドメインのみ `Access-Control-Allow-Origin` を返す
-- Rate Limiting: 将来的にFirebase App Hosting側で設定（初期は不要）
+- CORS: 全て許可（利便性優先）
 
 ### embed.js の動作
 
@@ -349,12 +322,12 @@ foreach ($data['items'] as $item) {
 
 | Phase | 内容 | 前提 |
 |-------|------|------|
-| **1** | プロジェクト雛形作成 | homepageからfork → 不要物削除 → Firestore schema定義 → Firebase新プロジェクト作成 |
-| **2** | 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | Phase 1完了 |
+| **1** | プロジェクト雛形作成 | homepage-v2 → 不要物削除 → DynamoDB設計書作成 |
+| **2** | setupアプリと管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | Phase 1完了 |
 | **3** | 管理画面: 記事CRUD + TinyMCEエディタ + 画像アップロード + 汎用フィールド + テンプレート管理 | Phase 2完了 |
 | **4** | 公開API: JSON API + CORSハンドリング | Phase 3完了 |
 | **5** | 公開API: embed.js (scriptタグ埋め込み + Handlebars SSR) | Phase 4完了 |
-| **6** | テナント管理: サイト作成時の自動セットアップ + siteadmin招待フロー (JWT) | Phase 4完了 |
+| **6** | テナント管理: サイト作成時の自動セットアップ + siteadmin管理（cognito API） | Phase 4完了 |
 | **7** | コンテンツタイプのfieldLabels定義 + 動的フォーム生成 + テンプレートエディタ | Phase 3完了 |
 
 **Phase 1→3 で管理画面MVP、Phase 4→5 で公開配信MVP。**
@@ -365,10 +338,9 @@ foreach ($data['items'] as $item) {
 
 - **開発マシン:** WSL (Ubuntu 22)
 - **IDE:** VS Code + GitHub Copilot (Claude)
-- **実行環境:** Firebase Studio からデプロイ or ローカル `next dev`
-- **デプロイ:** Firebase App Hosting (`git push` → 自動ビルド・デプロイ)
-- **Firebaseプロジェクト:** homepageとは**完全に別プロジェクト**を新規作成（一切干渉しない）
-- **ドメイン:** `newcleus.okamomedia.tokyo` (メディア本体は `www.okamomedia.tokyo`)
+- **実行環境とデプロイ:** setup画面からCDKデプロイ（ローカル `next dev`）
+- **newcleusプロジェクト:** homepageとは**完全に別プロジェクト**を新規作成（一切干渉しない）
+- **ドメイン:** xxx.cloudfront.net（独自ドメイン無し）
 
 ---
 
@@ -418,6 +390,6 @@ GET /api/v1/sites/{siteId}/items
 ## 10. 参照資料 `.sample-files`配下
 
 - 旧NucleusDB: testcms1のmysqldump
-- homepage資産: `homepage/` 配下
-- homepage blueprint: `homepage/docs/blueprint.md`
-- homepage DB設計: `homepage/docs/database-schema.md`
+- homepage-v2資産: `homepage/` 配下
+- homepage-v2 blueprint: `homepage/docs/blueprint_v2.md`
+- homepage-v2 DB設計: `homepage/docs/database-schema.md`
