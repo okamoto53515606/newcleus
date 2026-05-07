@@ -78,16 +78,18 @@
 
 ### 削除するもの (homepage-v2にあってCMSに不要)
 
+- インストーラーは不要（Powershellからwsl --import → setup/start.shでセットアップ画面を手動起動してもらう）
+- CORSは全て許可
+- CSPは無し
+- テストコード（githubアクション連動）やDAST（定期的なZAP）は不要
 - 独自ドメインは不要（xxx.cloudfront.netを使う）
 - WAF（WAFは不要）
 - Cogniteの2FAは不要
 - CDNのキャッシュはしない（/media/配下のみ1時間キャッシュ）
 - Stripe決済関連 / Googleログイン関連
-- AI記事生成 Genkit関連)
-- コメント機能 (`comments` コレクション, `src/components/comment-section.tsx`)
-- 記事公開ページ (`src/app/articles/`)
+- AI記事生成（Genkit関連)
 - Markdown関連 (`react-markdown`, `remark-gfm`)
-- setup2系とsetup3系とopsメニューは不要
+- setup1cとsetup2系とsetup3系とopsメニューは不要
 - 以下の環境変数を削除（環境変数利用コードも修正）
   - GEMINI_API_KEY
   - NEXT_PUBLIC_GOOGLE_CLIENT_ID
