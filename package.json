@@ -6,21 +6,35 @@
     "dev": "next dev --turbopack -p 9002",
     "build": "NODE_ENV=production next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src next.config.ts eslint.config.mjs --ext .js,.jsx,.ts,.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/third-parties": "^16.1.1",
+    "@aws-sdk/client-cloudfront": "^3.1032.0",
+    "@aws-sdk/client-dynamodb": "^3.1032.0",
+    "@aws-sdk/lib-dynamodb": "^3.1032.0",
+    "@aws-sdk/s3-request-presigner": "^3.1032.0",
+    "@next/third-parties": "^16.2.4",
     "browser-image-compression": "^2.0.2",
     "dotenv": "^16.5.0",
-    "firebase": "^11.0.2",
-    "firebase-admin": "^13.6.0",
+    "jose": "^6.2.2",
     "lucide-react": "^0.475.0",
-    "next": "16.2.5",
+    "next": "^16.2.5",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "react-markdown": "^9.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.0",
+    "stripe": "^20.1.0",
     "tsx": "^4.16.2",
     "zod": "^3.24.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "qs": "^6.14.2",
+    "uuid": "^14.0.0",
+    "@tootallnate/once": "^3.0.1"
   },
   "browserslist": [
     "last 2 Chrome versions",
@@ -30,9 +44,20 @@
     "not dead"
   ],
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1032.0",
+    "@aws-sdk/client-secrets-manager": "^3.1032.0",
+    "@eslint/eslintrc": "^3.3.1",
     "@types/node": "^20",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
+    "aws-cdk": "^2.1118.2",
+    "aws-cdk-lib": "^2.250.0",
+    "constructs": "^10.6.0",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.2.4",
+    "msw": "^2.14.2",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
