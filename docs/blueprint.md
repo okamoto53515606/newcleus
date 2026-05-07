@@ -102,7 +102,7 @@
   - STRIPE_WEBHOOK_PROXY_URL
   - CLOUDFRONT_DEFAULT_DOMAIN
   - CLOUDFRONT_DISTRIBUTION_ID
-
+- Claude Opus 4.7 は不要。Claude Sonnet 4.6 で開発
 ---
 
 ## 4. Nucleusから引き継ぐ設計思想
@@ -332,7 +332,7 @@ foreach ($data['items'] as $item) {
 ## 8. 開発環境
 
 - **開発マシン:** WSL (Ubuntu 22)
-- **IDE:** VS Code + GitHub Copilot (Claude)
+- **IDE:** VS Code + GitHub Copilot (Claude Sonnet 4.6)
 - **実行環境とデプロイ:** setup画面からCDKデプロイ（ローカル `next dev`）
 - **newcleusプロジェクト:** homepageとは**完全に別プロジェクト**を新規作成（一切干渉しない）
 - **ドメイン:** xxx.cloudfront.net（独自ドメイン無し）
