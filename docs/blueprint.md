@@ -327,22 +327,6 @@ foreach ($data['items'] as $item) {
 
 ---
 
-## 7. 開発フェーズ
-
-| Phase | 内容 | 前提 |
-|-------|------|------|
-| **1** | プロジェクト雛形作成 | homepage-v2 → 不要物削除 → DynamoDB設計書作成 |
-| **2** | setupアプリと管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | Phase 1完了 |
-| **3** | 管理画面: 記事CRUD + TinyMCEエディタ + 画像アップロード + 汎用フィールド + テンプレート管理 | Phase 2完了 |
-| **4** | 公開API: JSON API + CORSハンドリング | Phase 3完了 |
-| **5** | 公開API: embed.js (scriptタグ埋め込み + Handlebars SSR) | Phase 4完了 |
-| **6** | テナント管理: サイト作成時の自動セットアップ + siteadmin管理（cognito API） | Phase 4完了 |
-| **7** | コンテンツタイプのfieldLabels定義 + 動的フォーム生成 + テンプレートエディタ | Phase 3完了 |
-
-**Phase 1→3 で管理画面MVP、Phase 4→5 で公開配信MVP。**
-
----
-
 ## 8. 開発環境
 
 - **開発マシン:** WSL (Ubuntu 22)
