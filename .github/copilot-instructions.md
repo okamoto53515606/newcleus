@@ -11,7 +11,7 @@
 | フェーズ | 内容 | 状態 |
 |---------|------|------|
 | Phase 1 | プロジェクト雛形・不要物削除・DynamoDB設計 | ✅ 完了 |
-| Phase 2 | setupアプリ + 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | ✅ 完了 |
+| Phase 2 | setupアプリ + 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | ✅ コード実装済み（Dockerfile修正後の再デプロイが必要）|
 
 #### setup 画面の完了状況
 - `setup0`: AWS root キー検証 ✅
@@ -39,6 +39,9 @@
 | Phase 7 | コンテンツタイプ fieldLabels 定義 + 動的フォーム生成 + テンプレートエディタ |
 
 ### 次セッションで着手すべき作業
+
+**【先決】setup1b 再デプロイ**: Dockerfile の ENTRYPOINT 問題を修正済み（`public.ecr.aws/lambda/nodejs:20` → `node:20-alpine`、`ENTRYPOINT` 削除）。setup 画面から setup1b を再実行して Lambda イメージを更新する必要がある。  
+再デプロイ完了後に `https://d1sax4j5hw821p.cloudfront.net/admin/sites` でサイト管理CRUD が動作確認できる。
 
 **Phase 3 の実装開始**: `src/app/admin/(protected)/sites/[siteId]/items/` 配下に記事一覧・作成・編集ページを実装する。  
 参照: `docs/blueprint.md § 5.5 記事管理` および `docs/database-schema.md`
