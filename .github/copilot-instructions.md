@@ -108,16 +108,7 @@ Actions は Next.js が生成する内部 POST で動き、viewer が送る `x-a
 
 **ルール:**
 - `getSiteSettings()` 等 DB を参照する Server Component には `export const dynamic = 'force-dynamic'` を入れる
-- CDN 側 (`s-maxage`) で性能はカバーされるためコストは軽微
 
-### CloudFront は IPv4 限定運用
-
-**why:** WAF IPSet を IPv4 のみで管理する方針。CDN が IPv6 で受けると WAF の IP 制限を回避してしまうため。
-
-**ルール:**
-- CDK の `Distribution` で `enableIpv6: false`
-- 入力された IPv6（`:` を含むアドレス）は IPSet に登録しない
-
-### 既知の注意点（再掲。v2 で実地検証済み）
+### 既知の注意点（再掲）
 - DELETE に body を付けない（CloudFront が origin に転送しない → OAC 署名不一致）
 - `"use server"` 禁止（Server Actions の内部 POST は OAC 署名不一致で 403）
