@@ -74,9 +74,9 @@
 
 ---
 
-## 3. homepageから流用する資産
+## 3. homepage-v2から流用する資産
 
-### 削除するもの (homepageにあってCMSに不要)
+### 削除するもの (homepage-v2にあってCMSに不要)
 
 - 独自ドメインは不要（xxx.cloudfront.netを使う）
 - WAF（WAFは不要）
@@ -89,16 +89,17 @@
 - Markdown関連 (`react-markdown`, `remark-gfm`)
 - setup2系とsetup3系とopsメニューは不要
 - 以下の環境変数を削除（環境変数利用コードも修正）
-GEMINI_API_KEY=""
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-STRIPE_SECRET_KEY=""
-STRIPE_WEBHOOK_SECRET=""
-STRIPE_TAX_RATES=""
-CSP_REPORT_ONLY=""
-SESSION_DURATION_HOURS=""
-STRIPE_WEBHOOK_PROXY_URL=""
-CLOUDFRONT_DEFAULT_DOMAIN=""
+  - GEMINI_API_KEY
+  - NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  - GOOGLE_CLIENT_SECRET
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET
+  - STRIPE_TAX_RATES
+  - CSP_REPORT_ONLY
+  - SESSION_DURATION_HOURS
+  - STRIPE_WEBHOOK_PROXY_URL
+  - CLOUDFRONT_DEFAULT_DOMAIN
+  - CLOUDFRONT_DISTRIBUTION_ID
 
 ---
 

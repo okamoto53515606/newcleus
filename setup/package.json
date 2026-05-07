@@ -1,0 +1,46 @@
+{
+  "name": "newcleus-setup",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-account": "^3.1037.0",
+    "@aws-sdk/client-acm": "^3.1037.0",
+    "@aws-sdk/client-cloudformation": "^3.1036.0",
+    "@aws-sdk/client-cloudfront": "^3.1036.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1032.0",
+    "@aws-sdk/client-dynamodb": "^3.1037.0",
+    "@aws-sdk/client-ecr": "^3.1037.0",
+    "@aws-sdk/client-iam": "^3.1032.0",
+    "@aws-sdk/client-lambda": "^3.1035.0",
+    "@aws-sdk/client-route-53": "^3.1037.0",
+    "@aws-sdk/client-route-53-domains": "^3.1037.0",
+    "@aws-sdk/client-sts": "^3.1032.0",
+    "@aws-sdk/client-wafv2": "^3.1034.0",
+    "@aws-sdk/lib-dynamodb": "^3.1037.0",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.4.2",
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
+  }
+}

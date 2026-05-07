@@ -1,1 +1,37 @@
+# newcleus 環境変数テンプレート
+# このファイルを .env にコピーして値を設定してください
 
+# ========================================
+# AWS 基本設定
+# ========================================
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# ========================================
+# DynamoDB
+# ========================================
+# テーブル名プレフィックス（デフォルト: newcleus-）
+TABLE_PREFIX=newcleus-
+
+# ========================================
+# S3
+# ========================================
+S3_BUCKET_NAME=newcleus-media-<aws_account_id>
+
+# ========================================
+# CloudFront
+# ========================================
+# CloudFront ディストリビューションの本番ドメイン（例: d1234567890abc.cloudfront.net）
+# ローカル開発時は空でよい
+CLOUDFRONT_DOMAIN=
+
+# ========================================
+# Cognito（管理者認証）
+# ========================================
+# Cognito User Pool ID（例: ap-northeast-1_XXXXXXXXX）
+COGNITO_USER_POOL_ID=
+# Cognito App Client ID
+COGNITO_CLIENT_ID=
+# Cognito Hosted UI ドメインプレフィックス（例: newcleus-admin-123456789012）
+COGNITO_DOMAIN=

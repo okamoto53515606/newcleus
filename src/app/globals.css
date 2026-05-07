@@ -1,0 +1,1003 @@
+/**
+ * ========================================
+ * グローバルスタイル
+ * ========================================
+ */
+
+/* ========================================
+   リセット & ベース
+   ======================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   レイアウト
+   ======================================== */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #ccc;
+}
+
+.header__left, .header__right {
+  flex: 1;
+}
+.header__left {
+  display: flex;
+  justify-content: flex-start;
+}
+.header__center {
+  flex: 2;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+.header__expiry-label {
+  margin-right: 0.25em;
+}
+.header__expiry-date {
+  /* スタイル用 */
+}
+.header__right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.site-footer {
+  border-top: 1px solid #ccc;
+  padding: 24px 16px;
+  text-align: center;
+  color: #666;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.footer-links-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+.footer-links a {
+  text-decoration: underline;
+}
+.footer-links a:hover {
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.container--narrow {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.page-section {
+  padding: 32px 16px;
+}
+
+/* トップページのヘッダー（H1, 説明文）のセンタリング */
+.page-section.container {
+  text-align: center;
+}
+
+.page-section--large {
+  padding: 48px 16px;
+}
+
+/* ========================================
+   サイト説明文 (faviconカラー)
+   ======================================== */
+.site-description {
+  background-color: #001f3f;
+  color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  /* why: トップページで <h1> 直下に配置されるため、h1 の大きな default margin-top と
+     釣り合うよう margin-top を広げて垂直位置バランスを整える。 */
+  margin-top: 40px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left; /* テキスト自体は左寄せが見やすいため */
+  display: inline-block; /* センタリングのために inline-block 化 */
+  max-width: 800px;
+  width: 100%;
+}
+
+/* ========================================
+   ドロップダウンメニュー
+   ======================================== */
+.dropdown {
+  position: relative;
+}
+
+.dropdown__menu {
+  position: absolute;
+  right: 0; 
+  top: calc(100% + 8px);
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 200px;
+  z-index: 100;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown__menu--left {
+  right: auto;
+  left: 0;
+}
+
+.dropdown__user-info {
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+
+.dropdown__user-name {
+  font-weight: 500;
+}
+
+.dropdown__expiry {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.dropdown__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dropdown__item:hover {
+  background: #f5f5f5;
+}
+
+.dropdown__item--tag {
+  justify-content: space-between;
+}
+
+.dropdown__item--danger {
+  color: #dc2626;
+}
+
+.dropdown__item--danger:hover {
+  background: #fef2f2;
+}
+
+.dropdown__tag-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tag-count {
+  font-size: 0.8rem;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ========================================
+   記事リスト
+   ======================================== */
+.article-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left; /* コンテナが center なので戻す */
+}
+
+/* ========================================
+   記事カード
+   ======================================== */
+.article-card {
+  display: block; 
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  background: #fff;
+}
+
+.article-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.article-card__image-wrapper {
+  position: relative;
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.article-card__content {
+  padding: 16px;
+  flex-grow: 1;
+}
+
+.article-card__content h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.article-card__content p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.article-card__tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 12px;
+}
+
+.article-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.article-card__badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.article-card__badge--paid {
+  background-color: #e6f7ff;
+  color: #005f99;
+}
+.article-card__badge--free {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.article-card__date {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* ========================================
+   記事詳細ページ
+   ======================================== */
+.article__header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+.article__header h1 {
+  font-size: 1.8rem;
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+
+.article__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.article__tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.article__tag-link {
+  text-decoration: underline;
+  text-decoration-color: #ccc;
+  transition: all 0.2s;
+}
+.article__tag-link:hover {
+  color: #000;
+  text-decoration-color: #000;
+}
+
+.article__content {
+  margin-top: 24px;
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.article__content h2 {
+  font-size: 1.6rem;
+  margin: 48px 0 24px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.article__content h3 {
+  font-size: 1.3rem;
+  margin: 32px 0 16px 0;
+}
+
+.article__content hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 48px 0;
+}
+
+.article__content a {
+  color: #2563eb; /* 青色 */
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.article__content a:hover {
+  color: #1d4ed8; /* 少し濃い青色 */
+  text-decoration: none;
+}
+
+.article__content pre {
+  background-color: #f4f4f4;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.article__content :not(pre) > code {
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+
+/* 記事詳細の画像 (PC用) */
+@media (min-width: 481px) {
+  .article__content img {
+    max-width: 500px;
+    display: block;
+    margin: 0 auto;
+  }
+}
+
+/* テーブル: Markdownの表をスタイリング */
+.article__content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9em;
+}
+
+/* テーブルヘッダー */
+.article__content thead {
+  background-color: #f8f9fa;
+}
+
+/* セル共通スタイル */
+.article__content th,
+.article__content td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+/* ヘッダーセル */
+.article__content th {
+  font-weight: 600;
+  background-color: #f1f5f9;
+}
+
+/* 偶数行の背景色（ストライプ） */
+.article__content tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* 行ホバー時のハイライト */
+.article__content tbody tr:hover {
+  background-color: #f0f4f8;
+}
+
+.separator {
+  margin: 32px 0;
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+.article__footer-actions {
+  margin-top: 32px;
+  text-align: center;
+}
+
+/* ========================================
+   コメントセクション
+   ======================================== */
+.comment-list {
+  margin-top: 16px;
+}
+
+.comment {
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.comment__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.comment p {
+  overflow-wrap: break-word;
+}
+
+.comment-form {
+  margin-top: 24px;
+}
+
+.comment-form__textarea {
+  width: 100%;
+  padding: 8px;
+  min-height: 80px;
+}
+
+.comment-form__submit {
+  margin-top: 8px;
+  padding: 8px 16px;
+}
+
+/* ========================================
+   ペイウォール
+   ======================================== */
+.paywall {
+  text-align: center;
+  padding: 48px;
+  border: 1px solid #ccc;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.paywall__article-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  padding: 0 1rem;
+}
+
+.paywall__icon {
+  font-size: 48px;
+}
+
+.paywall__price {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.paywall__pricing {
+  margin: 24px 0;
+}
+
+.paywall__error {
+  color: red;
+}
+
+/* ========================================
+   決済結果ページ
+   ======================================== */
+.payment-result {
+  text-align: center;
+  padding: 48px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.payment-result__card {
+  border: 1px solid #ccc;
+  padding: 24px;
+}
+
+.payment-result__icon--success {
+  color: green;
+}
+
+.payment-result__icon--cancel {
+  color: #666;
+}
+
+.payment-result__actions {
+  margin-top: 24px;
+}
+
+.payment-result__benefits {
+  text-align: left;
+  margin-top: 16px;
+}
+
+/* ========================================
+   管理ページ
+   ======================================== */
+.admin-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+.admin-page__header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 24px;
+}
+
+.admin-notice {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  margin-top: 16px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.admin-notice__title {
+  font-weight: bold;
+}
+
+/* ========================================
+   フォーム共通
+   ======================================== */
+.form-card {
+  border: 1px solid #ccc;
+  padding: 16px;
+}
+
+.form-card__header {
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 8px;
+}
+
+/* ========================================
+   通知
+   ======================================== */
+.notification {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid;
+}
+
+.notification--success {
+  border-color: green;
+  background: #f0fff0;
+}
+
+.notification--error {
+  border-color: red;
+  background: #fff0f0;
+}
+
+/* ========================================
+   生成結果
+   ======================================== */
+.generated-result {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.generated-result__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.generated-result__image {
+  margin-bottom: 24px;
+}
+
+.generated-result__image-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.generated-result__image-container {
+  position: relative;
+  aspect-ratio: 16/9;
+}
+
+.markdown-preview {
+  padding: 16px;
+  border: 1px solid #eee;
+}
+
+/* ========================================
+   ボタン
+   ======================================== */
+.btn {
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: white;
+  white-space: nowrap;
+  color: #333; /* 文字色を明示的に指定 */
+  height: 38px; /* .btn-icon と高さを揃える */
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px; /* .btn と高さを揃える */
+  box-sizing: border-box;
+}
+
+.btn--primary {
+  padding: 12px 24px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn--secondary {
+  padding: 8px 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn--link {
+  display: inline-block;
+  padding: 12px 24px;
+}
+
+/* faviconカラーのホームボタン */
+.btn--home {
+  background-color: #001f3f;
+  color: #ffffff;
+  border-color: #001f3f;
+  transition: opacity 0.2s;
+}
+
+.btn--home:hover {
+  opacity: 0.9;
+  color: #ffffff;
+}
+
+/* ========================================
+   ローディング
+   ======================================== */
+.loading {
+  text-align: center;
+  padding: 48px;
+}
+
+.loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   ページネーション (利用者サイト用)
+   ======================================== */
+.pagination {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination__list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pagination__item + .pagination__item {
+  border-left: 1px solid #ccc;
+}
+
+.pagination__link {
+  display: block;
+  padding: 8px 12px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.pagination__link:hover {
+  background-color: #f5f5f5;
+}
+
+.pagination__link.active {
+  background-color: #333;
+  color: white;
+  font-weight: bold;
+  cursor: default;
+}
+
+.pagination__link.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+
+/* ========================================
+   ユーティリティ
+   ======================================== */
+.text-muted {
+  opacity: 0.5;
+  padding: 7px 12px; /* .btn と高さを揃える */
+  font-size: 0.875rem; /* 文字サイズを小さく */
+  white-space: nowrap; /* 改行を防止 */
+}
+
+/* ローディングスピナー */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  color: #666;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.error-text {
+  color: red;
+}
+
+.receipt-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.benefit-list {
+  text-align: left;
+  margin-top: 16px;
+}
+
+.payment-result__receipt {
+  margin-top: 24px;
+}
+
+.payment-result__message {
+  margin: 24px 0;
+}
+
+.form-group__label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.form-group__textarea {
+  width: 100%;
+  padding: 8px;
+}
+
+.generated-result__image {
+  position: relative;
+  aspect-ratio: 16/9;
+}
+
+.generated-result__image-section {
+  margin-bottom: 24px;
+}
+
+.generated-result__preview {
+  padding: 16px;
+  border: 1px solid #eee;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn--primary + .btn--secondary {
+  margin-top: 8px;
+}
+
+/* ========================================
+   スマホ向け: 記事詳細ページの横マージンを削減
+   ======================================== */
+@media (max-width: 480px) {
+  .container--narrow {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .page-section--large {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .article__header h1 {
+    font-size: 1.4rem;
+  }
+
+  .article__content h2 {
+    font-size: 1.4rem;
+    margin: 32px 0 16px 0;
+  }
+
+  .article__content h3 {
+    font-size: 1.2rem;
+    margin: 24px 0 16px 0;
+  }
+}
+
+/* ========================================
+   ログイン確認モーダル
+   ======================================== */
+.login-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.login-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.login-modal__title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.login-modal__terms-box {
+  height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 16px;
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background-color: #f9f9f9;
+}
+
+.login-modal__notice {
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #666;
+}
+
+.login-modal__close-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.login-modal__close-btn:hover {
+  color: #333;
+  text-decoration: underline;
+}
+
+/* スマホ向け */
+@media (max-width: 480px) {
+  .paywall {
+    padding: 24px 12px;
+    margin: 0 8px;
+  }
+  .login-modal {
+    padding: 16px;
+  }
+
+  .login-modal__terms-box {
+    height: 150px;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+  }
+}

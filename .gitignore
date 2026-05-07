@@ -59,5 +59,9 @@ package-lock.json
 # .modified
 .modified
 
+# CDK
+cdk.out/
+cdk-outputs.json
+
 # .sample-files
 *.sample-files

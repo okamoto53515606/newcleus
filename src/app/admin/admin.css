@@ -1,0 +1,454 @@
+/**
+ * ========================================
+ * 管理画面 専用スタイル
+ * ========================================
+ */
+
+/* ========================================
+   ベース & レイアウト
+   ======================================== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* 薄いグレーの背景 */
+  font-size: 0.875rem; /* 管理画面全体のベースフォントサイズを0.875rem(14px)に */
+}
+
+.admin-sidebar {
+  width: 240px;
+  background-color: #ffffff;
+  border-right: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.admin-sidebar--collapsed {
+  width: 60px;
+}
+
+.admin-sidebar__header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 65px;
+}
+
+.admin-sidebar--collapsed .admin-sidebar__header {
+  padding: 1rem;
+  justify-content: center;
+}
+
+.admin-sidebar__header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.admin-sidebar__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.admin-sidebar__toggle:hover {
+  background: #e9ecef;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  min-width: 0; /* flexアイテムの縮小を許可 */
+}
+
+/* ========================================
+   ナビゲーション
+   ======================================== */
+.admin-nav {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #495057;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.admin-sidebar--collapsed .admin-nav__link {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.admin-sidebar--collapsed .admin-nav__link svg {
+  flex-shrink: 0;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.admin-nav__link:hover {
+  background-color: #f1f3f5;
+}
+
+.admin-nav__link--active {
+  background-color: #e9ecef;
+  font-weight: 500;
+  color: #212529;
+}
+
+.admin-nav__separator {
+  border: none;
+  border-top: 1px solid #dee2e6;
+  margin: 1rem 0;
+}
+
+.admin-nav__link--back {
+  margin-top: auto; /* フッターのように一番下に配置 */
+}
+
+/* ========================================
+   ページヘッダー
+   ======================================== */
+.admin-page-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 1rem;
+}
+
+.admin-page-header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-page-header p {
+  color: #6c757d;
+}
+
+/* ========================================
+   カード & フォーム
+   ======================================== */
+.admin-card {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.admin-card + .admin-card {
+  margin-top: 1.5rem;
+}
+
+.admin-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.admin-form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.admin-input,
+.admin-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-input:focus,
+.admin-textarea:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.admin-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin-form-group small {
+  color: #6c757d;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* ========================================
+   リンク
+   ======================================== */
+.admin-link {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.admin-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+
+/* ========================================
+   ボタン
+   ======================================== */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.admin-btn--primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.admin-btn--primary:hover {
+  background-color: #0056b3;
+}
+
+.admin-btn--secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.admin-btn--secondary:hover {
+  background-color: #5a6268;
+}
+
+.admin-btn--danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.admin-btn--danger:hover {
+  background-color: #c82333;
+}
+
+.admin-btn[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   テーブル
+   ======================================== */
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.admin-table th {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+.admin-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.admin-table-actions {
+  /* display: flex; と gap: 0.5rem; を削除 */
+}
+
+
+/* ========================================
+   その他
+   ======================================== */
+.admin-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+}
+
+.admin-badge--published {
+  color: #fff;
+  background-color: #28a745;
+}
+
+.admin-badge--draft {
+  color: #fff;
+  background-color: #6c757d;
+}
+
+.admin-badge--paid {
+  color: #fff;
+  background-color: #007bff;
+}
+
+.admin-badge--free {
+  color: #212529;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.admin-notice {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #d6d8db;
+  margin-top: 16px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.admin-notice--success {
+  border-color: #b1dfbb;
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.admin-notice--error {
+  border-color: #f5c6cb;
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+/* ========================================
+   記事プレビュー用スタイル
+   ======================================== */
+.admin-prose {
+  line-height: 1.7;
+}
+.admin-prose h1,
+.admin-prose h2,
+.admin-prose h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+.admin-prose p {
+  margin-bottom: 1em;
+}
+.admin-prose ul,
+.admin-prose ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1em;
+}
+.admin-prose img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* ========================================
+   記事編集ページ用スタイル
+   ======================================== */
+.admin-article-info h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.admin-article-info__slug {
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.admin-article-info__tags {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.admin-article-info__assets {
+  margin-top: 1rem;
+}
+.admin-article-info__assets p {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+.admin-thumbnail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.admin-thumbnail {
+  display: block;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+}
+.admin-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-btn--inline {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  background: #f8f9fa;
+  text-decoration: none;
+  color: #212529;
+}
+.admin-btn--inline:hover {
+  background: #e9ecef;
+}
