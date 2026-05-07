@@ -44,9 +44,9 @@
 │  - setup画面からCDK でデプロイ        │
 │  - Cognito提供ログイン画面を利用(homepage資産から流用)      │
 │  - TinyMCE 7 Core エディタ (HTML出力)    │
-│  - 画像: browser-image-compression → サーバサイドAPI（/api/xxx） → S3     │
+│  - 画像: browser-image-compression → Cognito認証で保護されたサーバサイドAPI（/api/admin/xxx） → S3     │
 │  - サーバーサイド:  DynamoDB読み書き      │
-│  - サーバAPI（/api/xxx）をfetchで呼び出し  │
+│  - Cognito認証で保護されたサーバAPI（/api/admin/xxx）をfetchで呼び出し  │
 └──────────────┬───────────────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────────────┐
@@ -78,7 +78,7 @@
 
 ### 削除するもの (homepage-v2にあってCMSに不要)
 
-- インストーラーは不要（Powershellからwsl --import → setup/start.shでセットアップ画面を手動起動してもらう）
+- インストーラーは不要（Powershellからwsl --import → setup/start.sh でセットアップ画面を手動起動してもらう）
 - CORSは全て許可
 - CSPは無し
 - テストコード（githubアクション連動）やDAST（定期的なZAP）は不要
