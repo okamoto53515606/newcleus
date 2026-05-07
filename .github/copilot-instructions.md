@@ -40,18 +40,37 @@
 
 ### 次セッションで着手すべき作業
 
-**【先決】setup1b 再デプロイ**: Dockerfile の ENTRYPOINT 問題を修正済み（`public.ecr.aws/lambda/nodejs:20` → `node:20-alpine`、`ENTRYPOINT` 削除）。setup 画面から setup1b を再実行して Lambda イメージを更新する必要がある。  
+#### 【Step 1】Cognito ID トークンに `custom:role` が含まれない問題を修正（最優先）
+
+**症状（実証済み）**: `/api/admin/auth/me` のレスポンスが `{"sub":"...","email":"..."}` のみで `role` が含まれない。  
+→ `user.role === undefined` になり、管理画面の「新規サイト」「最初のサイトを作成する」ボタンが表示されない。
+
+**原因**: デプロイ済みの Cognito App Client `newcleus-admin-client` の「属性の読み取り権限」に `custom:role` / `custom:siteIds` が設定されていないため、ID トークンにカスタム属性が含まれない。CDK コード上は `readAttributes` が設定されているが、デプロイ時に反映されなかった可能性がある。
+
+**調査・修正手順（次回 aws-knowledge-mcp も確認すること）**:
+1. AWS コンソール: Cognito → User Pools → `newcleus-admin-pool` → App Clients → `newcleus-admin-client` → 「属性の読み取りと書き込みの権限」を開く
+2. `custom:role` / `custom:siteIds` の「読み取り」チェックが外れていれば有効化して保存
+3. ログアウト → 再ログインで新しい ID トークンを取得 → `/api/admin/auth/me` で `role: "admin"` が返ることを確認
+4. または CognitoStack を CDK で再デプロイして App Client 設定を同期（`callbackUrls` への CloudFront URL 追加も同時に反映できる）
+
+**デバッグ方法**: 本番確認が難しい場合はローカル（localhost:9002）でログインして `/api/admin/auth/me` を確認する。
+
+#### 【Step 2】setup1b 再デプロイ（Lambda イメージ更新）
+
+Dockerfile の ENTRYPOINT 問題を修正済み（`public.ecr.aws/lambda/nodejs:20` → `node:20-alpine`、`ENTRYPOINT` 削除）。setup 画面から setup1b を再実行して Lambda イメージを更新する必要がある。  
 再デプロイ完了後に `https://d1sax4j5hw821p.cloudfront.net/admin/sites` でサイト管理CRUD が動作確認できる。
 
-**Phase 3 の実装開始**: `src/app/admin/(protected)/sites/[siteId]/items/` 配下に記事一覧・作成・編集ページを実装する。  
+#### 【Step 3】Phase 3 の実装開始
+
+`src/app/admin/(protected)/sites/[siteId]/items/` 配下に記事一覧・作成・編集ページを実装する。  
 参照: `docs/blueprint.md § 5.5 記事管理` および `docs/database-schema.md`
 
 ### 既知の注意事項・実地検証済みトラブル
 
 - **Lambda Web Adapter の ENTRYPOINT 問題**: `public.ecr.aws/lambda/nodejs:20` を base image にすると `/lambda-entrypoint.sh` が `CMD ["node","server.js"]` を handler 形式として拒否し `Runtime.ExitError` になる。`node:20-alpine` を base image にし、adapter を `/opt/extensions/lambda-adapter` に配置（ENTRYPOINT 指定なし）で解決。
 - **setup1b のリンク**: 「次のステップへ」は `/setup1c-iam`（`/setup1c` は存在しない）
-- **【未確認・要検証】Cognito App Client の readAttributes 未設定問題**: `sites/page.tsx` の「新規サイト」ボタンが表示されない（`user.role` が undefined になる）事象を確認。原因は Cognito App Client に `custom:role` が readAttributes として設定されていない可能性。確認方法: ① ログイン状態で `/api/admin/auth/me` にアクセスして `role` が null か確認 ② Cognito コンソール → App Clients → `newcleus-admin-client` → 属性の読み取り権限に `custom:role` / `custom:siteIds` がチェックされているか確認。チェックが外れていれば AWS コンソール上で有効化 → ログアウト・再ログインで解消する見込み。
-- **【未確認】CognitoStack callbackUrls に CloudFront URL 未登録**: CDK の `callbackUrls` に `https://d1sax4j5hw821p.cloudfront.net/api/admin/auth/callback` が含まれていないため、CloudFront 経由でのログインが不可能。CognitoStack 再デプロイ時に追加が必要。
+- **【確認済み・要修正】Cognito App Client の readAttributes 未設定問題**: `/api/admin/auth/me` が `{"sub":"...","email":"..."}` のみを返し `role` が含まれないことを実証確認（2026-05-08）。Cognito App Client `newcleus-admin-client` の「属性の読み取り権限」に `custom:role` / `custom:siteIds` が設定されていないため ID トークンにカスタム属性が含まれない。対処: AWS コンソールで読み取り権限を手動有効化 → 再ログイン、または CognitoStack 再デプロイ。
+- **【確認済み・要修正】CognitoStack callbackUrls に CloudFront URL 未登録**: CDK コードは修正済み（d548587）。CognitoStack 再デプロイで本番ログインが有効化される。
 
 ## 記述方針（必須）
 
