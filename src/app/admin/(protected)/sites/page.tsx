@@ -65,10 +65,7 @@ export default async function SitesPage() {
                   サイト名
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  プラン
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ステータス
+                  shortname
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   作成日
@@ -80,27 +77,9 @@ export default async function SitesPage() {
               {sites.map((site) => (
                 <tr key={site.siteId} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{site.name}</p>
-                      {site.description && (
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                          {site.description}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium text-gray-900">{site.name}</p>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{site.plan}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                        site.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {site.status === 'active' ? '有効' : '停止'}
-                    </span>
-                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 font-mono">{site.shortname}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(site.createdAt).toLocaleDateString('ja-JP')}
                   </td>

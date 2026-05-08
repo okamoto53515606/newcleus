@@ -8,9 +8,7 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
   const router = useRouter();
   const [siteId, setSiteId] = useState('');
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [plan, setPlan] = useState('free');
-  const [status, setStatus] = useState<'active' | 'suspended'>('active');
+  const [shortname, setShortname] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
@@ -19,22 +17,18 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
   useEffect(() => {
     params.then(({ siteId: id }) => {
       setSiteId(id);
-      // サイト情報取得
       fetch(`/api/admin/sites/${id}`, { cache: 'no-store' })
         .then((res) => res.json())
         .then((data: { site?: SiteRecord; error?: string }) => {
           if (data.site) {
             setName(data.site.name);
-            setDescription(data.site.description ?? '');
-            setPlan(data.site.plan);
-            setStatus(data.site.status);
+            setShortname(data.site.shortname ?? '');
           }
           setFetching(false);
         })
         .catch(() => setFetching(false));
     });
 
-    // ロール確認
     fetch('/api/admin/auth/me', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data: { role?: string }) => setIsAdmin(data.role === 'admin'))
@@ -50,7 +44,7 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
       const res = await fetch(`/api/admin/sites/${siteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, plan, status }),
+        body: JSON.stringify({ name, shortname }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -113,47 +107,20 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            説明
+            短縮名（shortname）<span className="text-red-500">*</span>
           </label>
-          <textarea
-            maxLength={500}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="admin-input w-full"
-            rows={3}
+          <input
+            type="text"
+            required
+            maxLength={50}
+            value={shortname}
+            onChange={(e) => setShortname(e.target.value.toLowerCase())}
+            className="admin-input w-full font-mono"
+            pattern="[a-z0-9\-]+"
+            title="英小文字・数字・ハイフンのみ使用できます"
           />
+          <p className="text-xs text-gray-400 mt-1">英小文字・数字・ハイフンのみ。変更すると公開 API の URL が変わります。</p>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            プラン
-          </label>
-          <select
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            className="admin-input w-full"
-          >
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
-        </div>
-
-        {isAdmin && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ステータス
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as 'active' | 'suspended')}
-              className="admin-input w-full"
-            >
-              <option value="active">有効</option>
-              <option value="suspended">停止</option>
-            </select>
-          </div>
-        )}
 
         {error && (
           <p className="text-sm text-red-600">{error}</p>

@@ -8,14 +8,12 @@ import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-// サイト情報の型
+// サイト情報の型（DB設計書 §1 newcleus-sites に準拠）
 export interface SiteRecord {
   siteId: string;
   name: string;
-  description?: string;
-  plan: string;
-  status: 'active' | 'suspended';
-  ownerId: string;
+  shortname: string;
+  adminUsers: Array<{ userId?: string; email: string; status: 'pending' | 'active' }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,7 +65,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/sites
  * 新規サイトを作成する。admin のみ可能。
  *
- * Body: { name, description?, plan? }
+ * Body: { name, shortname }
  */
 export async function POST(req: NextRequest) {
   const user = await getAdminUser();
@@ -79,15 +77,16 @@ export async function POST(req: NextRequest) {
   if (!body || !body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
     return NextResponse.json({ error: 'name は必須です' }, { status: 400 });
   }
+  if (!body.shortname || typeof body.shortname !== 'string' || !/^[a-z0-9-]+$/.test(body.shortname.trim())) {
+    return NextResponse.json({ error: 'shortname は英小文字・数字・ハイフンのみ使用できます' }, { status: 400 });
+  }
 
   const now = new Date().toISOString();
   const site: SiteRecord = {
-    siteId: randomBytes(10).toString('hex'), // 20文字の16進数
+    siteId: randomBytes(10).toString('hex'),
     name: body.name.trim().slice(0, 100),
-    description: typeof body.description === 'string' ? body.description.trim().slice(0, 500) : undefined,
-    plan: typeof body.plan === 'string' ? body.plan : 'free',
-    status: 'active',
-    ownerId: user.sub ?? '',
+    shortname: body.shortname.trim().slice(0, 50),
+    adminUsers: [],
     createdAt: now,
     updatedAt: now,
   };

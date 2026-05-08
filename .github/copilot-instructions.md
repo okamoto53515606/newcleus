@@ -40,21 +40,6 @@
 
 ### 次セッションで着手すべき作業
 
-#### 【Step 1】Cognito ID トークンに `custom:role` が含まれない問題を修正（最優先）
-
-**症状（実証済み）**: `/api/admin/auth/me` のレスポンスが `{"sub":"...","email":"..."}` のみで `role` が含まれない。  
-→ `user.role === undefined` になり、管理画面の「新規サイト」「最初のサイトを作成する」ボタンが表示されない。
-
-### 既知の注意事項・実地検証済みトラブル
-
-- **【確認済み・要修正】Cognito App Client の readAttributes 未設定問題**: `/api/admin/auth/me` が `{"sub":"...","email":"..."}` のみを返し `role` が含まれないことを実証確認（2026-05-08）。AWS コンソールで App Client の「属性の読み取り権限」を確認したところ `custom:role` / `custom:siteIds` の読み取りは**チェック済み**だった。つまり App Client の設定は正しいが、ID トークンに `custom:role` クレームが含まれていない別の原因がある。  
-  **次回調査手順**: `src/lib/admin-auth.ts` にデバッグログを追加済み（`logger.info('[AdminAuth DEBUG] JWT payload keys: ...')`）。ローカル（localhost:9002）でログインして `npm run dev` のコンソール出力に `JWT payload keys` が何を含むか確認する。あわせて aws-knowledge-mcp で「Cognito ID token custom attributes not included authorization code grant」を調査する。
-
-okamoからclaudeへ：コンソール出力結果です。
-IDトークンからsubは取得できており、subは改ざんチェックできるのでsubは改ざん不能。lambda側でcognito APIを呼び出し、subにひもづくcustom:xxx属性を取得すれば、こちらも改ざん不能のはず。このroleやsiteIdsのチェックは/admin/xxxだけでなく、/api/admin/xxx でも必須。ご意見を下さい。
-Server  [AdminAuth DEBUG] JWT payload keys: at_hash, sub, email_verified, iss, cognito:username, origin_jti, aud, token_use, auth_time, exp, iat, jti, email forward-logs-shared.ts:95:22
- Server  [AdminAuth DEBUG] custom:role = undefined forward-logs-shared.ts:95:22
-
 #### 【Step 3】Phase 3 の実装開始
 
 `src/app/admin/(protected)/sites/[siteId]/items/` 配下に記事一覧・作成・編集ページを実装する。  
@@ -108,6 +93,15 @@ Actions は Next.js が生成する内部 POST で動き、viewer が送る `x-a
 
 **ルール:**
 - `getSiteSettings()` 等 DB を参照する Server Component には `export const dynamic = 'force-dynamic'` を入れる
+
+### DB設計と UI の整合性
+
+**why:** フォームの field type や項目名が `docs/database-schema.md` と乖離すると、登録データが DB に正しく格納されない。過去に `select`, `richtext` 等の存在しない型を UI に置いていた実例あり。
+
+**ルール:**
+- `FieldDefinition.type` は DB の列名プレフィックスに対応する `text | file | flag | date | num` の5種類のみ
+- フォームに新しい型・フィールドを追加する前に `docs/database-schema.md` を確認する
+- `fieldId` は DynamoDB のスロット識別子（`text0`〜`text9` 等）として使う
 
 ### 既知の注意点（再掲）
 - DELETE に body を付けない（CloudFront が origin に転送しない → OAC 署名不一致）

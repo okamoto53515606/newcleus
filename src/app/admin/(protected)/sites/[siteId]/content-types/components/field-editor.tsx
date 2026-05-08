@@ -13,13 +13,10 @@ import { randomBytes } from 'crypto';
 
 const FIELD_TYPES: { value: FieldDefinition['type']; label: string }[] = [
   { value: 'text', label: 'テキスト' },
-  { value: 'textarea', label: 'テキストエリア' },
-  { value: 'richtext', label: 'リッチテキスト' },
-  { value: 'number', label: '数値' },
-  { value: 'boolean', label: 'チェックボックス' },
+  { value: 'file', label: 'ファイル/画像' },
+  { value: 'flag', label: 'フラグ (真偽値)' },
   { value: 'date', label: '日付' },
-  { value: 'image', label: '画像' },
-  { value: 'select', label: '選択肢' },
+  { value: 'num', label: '数値' },
 ];
 
 interface Props {
@@ -37,7 +34,6 @@ export function FieldEditor({ fields, onChange }: Props) {
         fieldId: Math.random().toString(36).slice(2, 10),
         name: '',
         type: 'text',
-        required: false,
       },
     ]);
   };
@@ -52,16 +48,11 @@ export function FieldEditor({ fields, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-700">フィールド定義</h2>
-        <button type="button" onClick={addField} className="admin-btn text-xs">
-          + フィールドを追加
-        </button>
-      </div>
+      <h2 className="text-sm font-medium text-gray-700">フィールド定義</h2>
 
       {fields.length === 0 && (
         <p className="text-sm text-gray-400 text-center py-4 border border-dashed rounded-lg">
-          フィールドがありません。「+ フィールドを追加」から追加してください。
+          フィールドがありません。下の「+ フィールドを追加」から追加してください。
         </p>
       )}
 
@@ -109,42 +100,13 @@ export function FieldEditor({ fields, onChange }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              id={`${baseId}-req-${idx}`}
-              type="checkbox"
-              checked={field.required ?? false}
-              onChange={(e) => updateField(idx, { required: e.target.checked })}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label htmlFor={`${baseId}-req-${idx}`} className="text-xs text-gray-600">
-              必須項目
-            </label>
-          </div>
 
-          {field.type === 'select' && (
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">
-                選択肢（1行1項目）
-              </label>
-              <textarea
-                value={(field.options ?? []).join('\n')}
-                onChange={(e) =>
-                  updateField(idx, {
-                    options: e.target.value
-                      .split('\n')
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
-                className="admin-input w-full text-sm"
-                rows={3}
-                placeholder="選択肢A&#10;選択肢B&#10;選択肢C"
-              />
-            </div>
-          )}
         </div>
       ))}
+
+      <button type="button" onClick={addField} className="admin-btn text-xs w-full">
+        + フィールドを追加
+      </button>
     </div>
   );
 }

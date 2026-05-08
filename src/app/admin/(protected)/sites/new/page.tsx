@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function NewSitePage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [plan, setPlan] = useState('free');
+  const [shortname, setShortname] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,7 +19,7 @@ export default function NewSitePage() {
       const res = await fetch('/api/admin/sites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, plan }),
+        body: JSON.stringify({ name, shortname }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -57,37 +56,26 @@ export default function NewSitePage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="admin-input w-full"
-            placeholder="例: My Blog"
+            placeholder="例: サンプルクリニック"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            説明
+            短縮名（shortname）<span className="text-red-500">*</span>
           </label>
-          <textarea
-            maxLength={500}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="admin-input w-full"
-            rows={3}
-            placeholder="サイトの説明（省略可）"
+          <input
+            type="text"
+            required
+            maxLength={50}
+            value={shortname}
+            onChange={(e) => setShortname(e.target.value.toLowerCase())}
+            className="admin-input w-full font-mono"
+            placeholder="例: sample-clinic"
+            pattern="[a-z0-9\-]+"
+            title="英小文字・数字・ハイフンのみ使用できます"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            プラン
-          </label>
-          <select
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-            className="admin-input w-full"
-          >
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
+          <p className="text-xs text-gray-400 mt-1">英小文字・数字・ハイフンのみ。API の URL 識別子として使用します。</p>
         </div>
 
         {error && (

@@ -4,23 +4,18 @@
  * ========================================
  */
 
-/* ========================================
-   リセット & ベース
-   ======================================== */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* Tailwind CSS v4
+ * why: @import "tailwindcss" 一行で Preflight（リセット）+ ユーティリティクラスが有効になる。
+ *      tailwind.config.js は v4 では不要。コンテンツのスキャンは自動検出。
+ */
+@import "tailwindcss";
 
+/* ========================================
+   ベース上書き
+   ======================================== */
 body {
   font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
   line-height: 1.6;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
 }
 
 img {

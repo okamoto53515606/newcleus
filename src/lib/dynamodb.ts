@@ -16,7 +16,6 @@ export const Tables = {
   contentTypes: `${TABLE_PREFIX}content-types`,
   templates: `${TABLE_PREFIX}templates`,
   items: `${TABLE_PREFIX}items`,
-  users: `${TABLE_PREFIX}users`,
 } as const;
 
 /** GSI 名 */

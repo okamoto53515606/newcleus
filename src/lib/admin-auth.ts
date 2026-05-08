@@ -1,9 +1,9 @@
 /**
  * 管理者認証ユーティリティ（Cognito）
- * 
+ *
  * 利用者サイトの Google OAuth セッション（cookie: session）とは完全独立。
  * 管理者は Cognito Hosted UI でログインし、admin_session cookie で管理。
- * 
+ *
  * 【セッション比較】
  * | 項目           | 利用者（Google OAuth） | 管理者（Cognito）         |
  * |---------------|----------------------|--------------------------|
@@ -11,10 +11,24 @@
  * | JWT 署名       | HS256（自前 JWT_SECRET）| RS256（Cognito JWKS）     |
  * | 検証方法       | jose jwtVerify        | jose jwtVerify + JWKS     |
  * | 認証プロバイダ  | Google               | Cognito（MFA 必須）       |
+ *
+ * 【custom:role / custom:siteIds の取得方式について】
+ * Cognito の ID トークンに custom:* 属性が含まれない場合がある
+ * （App Client の ReadAttributes 設定・CDK drift 等の影響）。
+ * ID トークンから取得するとロール変更がトークン再発行まで反映されない問題もある。
+ *
+ * why: JWT の sub クレームは RS256 署名で改ざん不能。
+ *      その sub に紐づく属性をサーバー側で Cognito AdminGetUser API で
+ *      直接取得することで、常に最新の正しい値を使用できる。
+ *      Lambda 実行ロールに cognito-idp:AdminGetUser を付与する必要がある。
  */
 
 import { cookies } from 'next/headers';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
+import {
+  CognitoIdentityProviderClient,
+  AdminGetUserCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { logger } from './env';
 
 const ADMIN_SESSION_COOKIE_NAME = 'admin_session';
@@ -63,9 +77,72 @@ function getJwks() {
   return _jwks;
 }
 
+// Cognito AdminGetUser 結果のインメモリキャッシュ
+// why: Lambda ウォームスタート間でモジュール変数は保持される。
+//      リクエストごとに Cognito API を叩くと 100〜200ms のレイテンシーが発生するため
+//      60 秒 TTL のキャッシュを挟む。ロール変更は最大 60 秒後に反映される。
+interface CognitoAttrCache {
+  role?: string;
+  siteIds?: string[];
+  expiresAt: number;
+}
+const _attrCache = new Map<string, CognitoAttrCache>();
+
 /**
- * 管理者セッションを検証
- * admin_session cookie の Cognito ID Token を JWKS で検証
+ * Cognito AdminGetUser API で sub に紐づく custom 属性を取得する
+ *
+ * why: ID トークンの custom:* クレームは App Client の ReadAttributes 設定や
+ *      CDK drift の影響で欠落することがある。また JWT はステートフルでないため
+ *      ロール変更がトークン再発行まで反映されない。
+ *      sub は RS256 署名で改ざん不能であるため、sub を信頼の起点として
+ *      サーバー側で最新の属性を取得する方式がより安全。
+ *
+ * @param cognitoUsername - JWT の cognito:username クレーム（メールアドレス）
+ * @param sub - JWT の sub クレーム（キャッシュキーとして使用）
+ */
+async function lookupCognitoAttributes(
+  cognitoUsername: string,
+  sub: string
+): Promise<{ role?: string; siteIds?: string[] }> {
+  const now = Date.now();
+  const cached = _attrCache.get(sub);
+  if (cached && cached.expiresAt > now) {
+    return { role: cached.role, siteIds: cached.siteIds };
+  }
+
+  const userPoolId = process.env.COGNITO_USER_POOL_ID!;
+  const region = userPoolId.split('_')[0];
+
+  const client = new CognitoIdentityProviderClient({ region });
+  const resp = await client.send(
+    new AdminGetUserCommand({ UserPoolId: userPoolId, Username: cognitoUsername })
+  );
+
+  const attrMap = Object.fromEntries(
+    (resp.UserAttributes ?? []).map((a) => [a.Name, a.Value])
+  );
+
+  const result: CognitoAttrCache = {
+    role: attrMap['custom:role'],
+    siteIds: (() => {
+      const raw = attrMap['custom:siteIds'];
+      if (!raw) return undefined;
+      try { return JSON.parse(raw) as string[]; } catch { return undefined; }
+    })(),
+    expiresAt: now + 60_000, // 60 秒 TTL
+  };
+  _attrCache.set(sub, result);
+  return { role: result.role, siteIds: result.siteIds };
+}
+
+/**
+ * 管理者セッションを検証し AdminUser を返す
+ *
+ * 手順:
+ *  1. admin_session cookie の Cognito ID Token を JWKS（RS256）で署名検証
+ *  2. sub・cognito:username を JWT から取得（改ざん不能）
+ *  3. AdminGetUser API で最新の custom:role / custom:siteIds を取得
+ *     （ID トークンの claim には依存しない）
  */
 export async function getAdminUser(): Promise<AdminUser> {
   const cookieStore = await cookies();
@@ -81,26 +158,23 @@ export async function getAdminUser(): Promise<AdminUser> {
       audience: process.env.COGNITO_CLIENT_ID,
     });
 
-    // DEBUG: ID トークンに含まれる全クレームをログ出力
-    // why: custom:role が /api/admin/auth/me で返らない問題の調査用。
-    //      原因が判明したらこの行は削除する。
-    logger.info(`[AdminAuth DEBUG] JWT payload keys: ${Object.keys(payload).join(', ')}`);
-    logger.info(`[AdminAuth DEBUG] custom:role = ${String(payload['custom:role'])}`);
+    const sub = payload.sub;
+    const cognitoUsername = payload['cognito:username'] as string | undefined;
+
+    if (!sub || !cognitoUsername) {
+      logger.error('[AdminAuth] JWT に sub または cognito:username が含まれていません');
+      return { isAuthenticated: false };
+    }
+
+    // Cognito API で最新の custom 属性を取得（JWTのclaimには依存しない）
+    const { role, siteIds } = await lookupCognitoAttributes(cognitoUsername, sub);
 
     return {
       isAuthenticated: true,
       email: payload.email as string | undefined,
-      sub: payload.sub as string | undefined,
-      role: payload['custom:role'] as string | undefined,
-      siteIds: (() => {
-        const raw = payload['custom:siteIds'] as string | undefined;
-        if (!raw) return undefined;
-        try {
-          return JSON.parse(raw) as string[];
-        } catch {
-          return undefined;
-        }
-      })(),
+      sub,
+      role,
+      siteIds,
     };
   } catch (error: unknown) {
     const errorMessage = (error as { message?: string })?.message;

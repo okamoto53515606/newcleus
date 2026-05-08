@@ -6,13 +6,15 @@ import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-/** コンテンツタイプのフィールド定義 */
+/**
+ * コンテンツタイプのフィールド定義
+ * why: DynamoDB の items テーブルは text0-9 / file0-9 / flag0-9 / date0-9 / num0-9
+ *      の固定スロット構造。各 CT はそのうち使うスロットにラベルを付ける形。
+ */
 export interface FieldDefinition {
-  fieldId: string;
-  name: string;
-  type: 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'date' | 'image' | 'select';
-  required?: boolean;
-  options?: string[]; // select 型の選択肢
+  fieldId: string; // スロット識別子: text0〜text9, file0〜file9, flag0〜flag9, date0〜date9, num0〜num9
+  name: string;   // ラベル (例: "概要")
+  type: 'text' | 'file' | 'flag' | 'date' | 'num';
 }
 
 /** コンテンツタイプのレコード */

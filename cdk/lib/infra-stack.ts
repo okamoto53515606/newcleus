@@ -117,19 +117,7 @@ export class InfraStack extends cdk.Stack {
     });
 
     // =========================================================
-    // 5. users テーブル
-    //    PK: userId（Cognito sub）
-    // =========================================================
-    const usersTable = new dynamodb.Table(this, 'UsersTable', {
-      tableName: `${prefix}users`,
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
-
-    // =========================================================
-    // 6. S3 メディアバケット
+    // 5. S3 メディアバケット
     // =========================================================
     const mediaBucket = new s3.Bucket(this, 'MediaBucket', {
       bucketName: `${prefix}media-${this.account}`,
@@ -169,7 +157,7 @@ export class InfraStack extends cdk.Stack {
     });
 
     // DynamoDB 権限
-    for (const table of [sitesTable, contentTypesTable, templatesTable, itemsTable, usersTable]) {
+    for (const table of [sitesTable, contentTypesTable, templatesTable, itemsTable]) {
       table.grantReadWriteData(appLambda);
     }
 
@@ -181,6 +169,19 @@ export class InfraStack extends cdk.Stack {
       actions: ['cloudfront:CreateInvalidation'],
       resources: [
         `arn:aws:cloudfront::${this.account}:distribution/*`,
+      ],
+    }));
+
+    // Cognito AdminGetUser 権限
+    // why: admin-auth.ts は ID トークンの custom:* claim に依存せず、
+    //      JWT の sub を起点として AdminGetUser API でサーバー側から
+    //      最新の custom:role / custom:siteIds を取得する。
+    //      これにより App Client の ReadAttributes 設定に依存せず、
+    //      かつロール変更が即時に反映される（セキュリティ強化）。
+    appLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminGetUser'],
+      resources: [
+        `arn:aws:cognito-idp:${this.region}:${this.account}:userpool/*`,
       ],
     }));
 

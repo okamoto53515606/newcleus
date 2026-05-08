@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ site
 
 /**
  * PUT /api/admin/sites/[siteId]
- * Body: { name?, description?, plan?, status? }
+ * Body: { name?, shortname? }
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ siteId: string }> }) {
   const user = await getAdminUser();
@@ -60,16 +60,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ site
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
 
+  if (body.shortname !== undefined && (typeof body.shortname !== 'string' || !/^[a-z0-9-]+$/.test(body.shortname.trim()))) {
+    return NextResponse.json({ error: 'shortname は英小文字・数字・ハイフンのみ使用できます' }, { status: 400 });
+  }
+
   const current = existing.Item as SiteRecord;
   const updated: SiteRecord = {
     ...current,
     name: typeof body.name === 'string' && body.name.trim() ? body.name.trim().slice(0, 100) : current.name,
-    description: typeof body.description === 'string' ? body.description.trim().slice(0, 500) : current.description,
-    plan: typeof body.plan === 'string' ? body.plan : current.plan,
-    // status 変更は admin のみ
-    status: user.role === 'admin' && (body.status === 'active' || body.status === 'suspended')
-      ? body.status
-      : current.status,
+    shortname: typeof body.shortname === 'string' && body.shortname.trim() ? body.shortname.trim().slice(0, 50) : current.shortname,
     updatedAt: new Date().toISOString(),
   };
 

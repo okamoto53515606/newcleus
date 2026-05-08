@@ -8,13 +8,10 @@ import { FieldEditor } from '../components/field-editor';
 
 const FIELD_TYPES: { value: FieldDefinition['type']; label: string }[] = [
   { value: 'text', label: 'テキスト' },
-  { value: 'textarea', label: 'テキストエリア' },
-  { value: 'richtext', label: 'リッチテキスト' },
-  { value: 'number', label: '数値' },
-  { value: 'boolean', label: 'チェックボックス' },
+  { value: 'file', label: 'ファイル/画像' },
+  { value: 'flag', label: 'フラグ (真偽値)' },
   { value: 'date', label: '日付' },
-  { value: 'image', label: '画像' },
-  { value: 'select', label: '選択肢' },
+  { value: 'num', label: '数値' },
 ];
 
 export { FIELD_TYPES };
