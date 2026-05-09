@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お知らせ埋め込みサンプル — newcleus</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.7;
+    }
+    .page-header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .page-header h1 { margin: 0 0 .5rem; font-size: 1.5rem; }
+    .page-header p  { margin: 0; opacity: .75; font-size: .9rem; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ─── ライブデモエリア ─── */
+    .demo-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .demo-card h2 {
+      margin: 0 0 1.25rem;
+      font-size: 1.1rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .badge-live {
+      display: inline-block;
+      background: #22c55e;
+      color: #fff;
+      font-size: .7rem;
+      padding: .15em .55em;
+      border-radius: 3px;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+
+    /* ─── コード解説エリア ─── */
+    .section { margin-bottom: 2.5rem; }
+    .section h2 {
+      font-size: 1.2rem;
+      border-left: 4px solid #3b82f6;
+      padding-left: .75rem;
+      margin: 0 0 1rem;
+    }
+    .section h3 {
+      font-size: 1rem;
+      margin: 1.5rem 0 .5rem;
+      color: #444;
+    }
+    .section p { margin: .5rem 0; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: .825rem;
+      line-height: 1.6;
+      margin: .75rem 0;
+    }
+    code { font-family: "Fira Code", "JetBrains Mono", Consolas, monospace; }
+    .hl-attr  { color: #89dceb; }
+    .hl-val   { color: #a6e3a1; }
+    .hl-tag   { color: #cba6f7; }
+    .hl-cmt   { color: #6c7086; font-style: italic; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .875rem;
+      margin: .75rem 0;
+    }
+    th {
+      background: #f0f4ff;
+      text-align: left;
+      padding: .6rem .75rem;
+      border: 1px solid #dce3f0;
+    }
+    td { padding: .55rem .75rem; border: 1px solid #e8ecf3; vertical-align: top; }
+    td code { background: #f3f4f6; padding: .1em .35em; border-radius: 3px; font-size: .85em; }
+    .req { color: #ef4444; font-weight: 600; }
+    .opt { color: #6b7280; }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: .8rem;
+      color: #aaa;
+      border-top: 1px solid #e5e5e5;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>📰 お知らせ — embed.js サンプル</h1>
+  <p>ページャ（前へ / 次へ）＋タイトルクリックでモーダル詳細表示</p>
+</header>
+
+<div class="container">
+
+  <!-- ─── ライブデモ ─── -->
+  <div class="demo-card">
+    <h2><span class="badge-live">LIVE</span> 動作サンプル（テストデータ 20件 / 5件ずつ表示）</h2>
+
+    <!-- embed 本体 -->
+    <div id="cms-news"></div>
+    <script
+      src="https://d1sax4j5hw821p.cloudfront.net/api/v1/sites/394d74824fe2cafd41de/embed.js"
+      data-content-type="14a03a56c6de2755be9a"
+      data-template="list-modal"
+      data-target="cms-news"
+      data-limit="5"
+      data-modal-template="detail"
+    ></script>
+  </div>
+
+  <!-- ─── 埋め込み方 ─── -->
+  <div class="section">
+    <h2>埋め込み方</h2>
+
+    <h3>① コンテナ要素を配置</h3>
+    <p>コンテンツを挿入したい場所に <code>&lt;div&gt;</code> を置きます。<code>id</code> は任意の名前で OK です。</p>
+    <pre><code><span class="hl-tag">&lt;div</span> <span class="hl-attr">id</span>=<span class="hl-val">"cms-news"</span><span class="hl-tag">&gt;&lt;/div&gt;</span></code></pre>
+
+    <h3>② embed.js を読み込む</h3>
+    <p>コンテナの直後（または <code>&lt;/body&gt;</code> 前）に以下の <code>&lt;script&gt;</code> タグを貼り付けます。</p>
+<pre><code><span class="hl-tag">&lt;script</span>
+  <span class="hl-attr">src</span>=<span class="hl-val">"https://d1sax4j5hw821p.cloudfront.net/api/v1/sites/394d74824fe2cafd41de/embed.js"</span>
+  <span class="hl-attr">data-content-type</span>=<span class="hl-val">"14a03a56c6de2755be9a"</span>
+  <span class="hl-attr">data-template</span>=<span class="hl-val">"list-modal"</span>
+  <span class="hl-attr">data-target</span>=<span class="hl-val">"cms-news"</span>
+  <span class="hl-attr">data-limit</span>=<span class="hl-val">"5"</span>
+  <span class="hl-attr">data-modal-template</span>=<span class="hl-val">"detail"</span>
+<span class="hl-tag">&gt;&lt;/script&gt;</span></code></pre>
+  </div>
+
+  <!-- ─── パラメータ一覧 ─── -->
+  <div class="section">
+    <h2>script タグ属性一覧</h2>
+    <table>
+      <tr><th>属性</th><th>必須</th><th>説明</th><th>デフォルト</th></tr>
+      <tr><td><code>src</code></td><td class="req">必須</td><td>embed.js の URL（上記のまま）</td><td>—</td></tr>
+      <tr><td><code>data-content-type</code></td><td class="req">必須</td><td>コンテンツタイプ ID</td><td>—</td></tr>
+      <tr><td><code>data-template</code></td><td class="req">必須</td><td>テンプレートの shortname（例: <code>list-modal</code>）</td><td>—</td></tr>
+      <tr><td><code>data-target</code></td><td class="opt">任意</td><td>挿入先要素の <code>id</code></td><td><code>cms-content</code></td></tr>
+      <tr><td><code>data-limit</code></td><td class="opt">任意</td><td>1ページの表示件数</td><td><code>5</code></td></tr>
+      <tr><td><code>data-modal-template</code></td><td class="opt">任意</td><td>モーダル詳細用テンプレートの shortname</td><td><code>detail</code></td></tr>
+      <tr><td><code>data-sort</code></td><td class="opt">任意</td><td><code>desc</code> / <code>asc</code></td><td><code>desc</code></td></tr>
+      <tr><td><code>data-sort-by</code></td><td class="opt">任意</td><td>ソートキー（例: <code>createdAt</code>）</td><td><code>createdAt</code></td></tr>
+      <tr><td><code>data-flag0</code> 〜 <code>data-flag9</code></td><td class="opt">任意</td><td>フラグフィールドでフィルタ（<code>0</code>/<code>1</code>）</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <!-- ─── 利用可能テンプレート ─── -->
+  <div class="section">
+    <h2>利用可能なテンプレート shortname</h2>
+    <table>
+      <tr><th>shortname</th><th>説明</th></tr>
+      <tr><td><code>list-modal</code></td><td>記事一覧（日付・タイトル）。タイトルクリックでモーダル詳細表示 + ページャ付き</td></tr>
+      <tr><td><code>detail</code></td><td>単一記事の詳細フラグメント（モーダル内に注入されるHTMLフラグメント）</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  powered by <strong>newcleus</strong> — embed.js demo page
+</footer>
+
+</body>
+</html>

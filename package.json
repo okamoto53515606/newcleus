@@ -7,7 +7,10 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "eslint src next.config.ts eslint.config.mjs --ext .js,.jsx,.ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed-test-data.ts",
+    "seed:dry": "tsx scripts/seed-test-data.ts --dry-run",
+    "seed:delete": "tsx scripts/seed-test-data.ts --delete"
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.1032.0",
