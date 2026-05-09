@@ -1,6 +1,6 @@
 # newcleus セットアップ手順書
 
-> **このパートのゴール:** AWS アカウントを準備し、CloudFront ドメイン（`xxx.cloudfront.net`）でサイトと管理画面を公開する。
+> **このパートのゴール:** AWS アカウントを準備し、CloudFront ドメイン（`xxx.cloudfront.net`）で管理画面を公開する。
 
 セットアップ画面は配布用 WSL イメージを起動すると `http://localhost:3001` で開きます。下記「事前準備」でWSLからセットアップ画面を起動してから Step 0 以降に進んでください。
 
