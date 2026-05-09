@@ -16,6 +16,7 @@
 | Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
 | Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
 | Phase 6 | テナント管理: siteadmin 管理（Cognito API） | ✅ 完了 |
+| Phase 7 | サイト追加時にいくつかのコンテンツタイプ＋テンプレート（お知らせとフォトギャラリー）を初期セットしたい。|
 
 #### setup 画面の完了状況
 - `setup0`: AWS root キー検証 ✅
@@ -32,12 +33,6 @@
 - `src/lib/` — admin-auth / dynamodb / env 等ユーティリティ
 - `src/components/admin/admin-sidebar.tsx` — サイドバー（ロール別メニュー・ユーザー情報・ログアウト・フッター）
 - `Dockerfile` — Lambda Web Adapter + node:20-alpine 構成（ENTRYPOINTなし、/opt/extensions/ 配置方式）
-
-### 未実装（次セッション以降の作業）
-
-| フェーズ | 内容 |
-|---------|------|
-| Phase 7 | サイト追加時にいくつかのコンテンツタイプ＋テンプレート（お知らせとフォトギャラリー）を初期セットしたい。|
 
 ## 記述方針（必須）
 

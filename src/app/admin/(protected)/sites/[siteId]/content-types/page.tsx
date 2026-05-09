@@ -43,15 +43,14 @@ export default async function ContentTypesPage({
       <div className="flex items-center justify-between">
         <div>
           <nav className="text-sm text-gray-500 mb-1">
-            <Link href="/admin/sites" className="hover:underline">
-              設定
-            </Link>{' '}
-            / <span className="text-gray-700">{site.name}</span>
+            <Link href="/admin/sites" className="hover:underline text-gray-500">設定</Link>
+            {' / '}
+            <span className="text-gray-700">{site.name}</span>
+            {' / '}
+            <span className="text-gray-900">コンテンツタイプ一覧</span>
           </nav>
-          <h1 className="text-2xl font-bold text-gray-900">コンテンツタイプ</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            このサイトのコンテンツタイプ設定を行います
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">コンテンツタイプ一覧</h1>
+          <p className="text-xs text-gray-400 font-mono mt-1">SITE_ID: {siteId}</p>
         </div>
         <Link
           href={`/admin/sites/${siteId}/content-types/new`}
@@ -107,13 +106,13 @@ export default async function ContentTypesPage({
                   <td className="px-6 py-4 text-right space-x-2">
                     <Link
                       href={`/admin/sites/${siteId}/content-types/${ct.ctId}/templates`}
-                      className="admin-btn text-xs"
+                      className="admin-btn admin-btn--sm"
                     >
                       テンプレート
                     </Link>
                     <Link
                       href={`/admin/sites/${siteId}/content-types/${ct.ctId}/edit`}
-                      className="admin-btn text-xs"
+                      className="admin-btn admin-btn--sm"
                     >
                       編集
                     </Link>

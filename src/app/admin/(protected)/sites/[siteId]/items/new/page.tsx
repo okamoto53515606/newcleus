@@ -63,16 +63,14 @@ export default async function NewItemPage({
         <nav className="text-sm text-gray-500 mb-1">
           <Link href={`/admin?siteId=${siteId}`} className="text-gray-700 hover:underline">
             {site.name}
-          </Link>{' '}
-          &gt;{' '}
+          </Link>{' / '}
           <Link
             href={`/admin/sites/${siteId}/items?contentTypeId=${contentTypeId}`}
             className="text-gray-700 hover:underline"
           >
-            {contentTypeName}
-          </Link>{' '}
-          &gt;{' '}
-          <span className="text-gray-700">記事追加</span>
+            {contentTypeName}の記事一覧
+          </Link>{' / '}
+          <span className="text-gray-900">{contentTypeName}の記事追加</span>
         </nav>
         <h1 className="text-2xl font-bold text-gray-900">{contentTypeName}の記事追加</h1>
       </div>

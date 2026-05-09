@@ -107,13 +107,10 @@ export default async function SiteItemsPage({
       <div className="flex items-center justify-between">
         <div>
           <nav className="text-sm text-gray-500 mb-1">
-            <Link href={`/admin?siteId=${siteId}`} className="text-gray-700 hover:underline">
+            <Link href={`/admin?siteId=${siteId}`} className="hover:underline text-gray-700">
               {site.name}
-            </Link>{' '}
-            &gt;{' '}
-            <span className="text-gray-700">{activeCtName}</span>{' '}
-            &gt;{' '}
-            <span className="text-gray-700">記事一覧</span>
+            </Link>{' / '}
+            <span className="text-gray-900">{activeCtName}の記事一覧</span>
           </nav>
           <h1 className="text-2xl font-bold text-gray-900">{activeCtName}の記事一覧</h1>
         </div>
@@ -182,7 +179,7 @@ export default async function SiteItemsPage({
                   <td className="px-6 py-4 text-right">
                     <Link
                       href={`/admin/sites/${siteId}/items/${item.itemId}/edit`}
-                      className="admin-btn text-xs"
+                      className="admin-btn admin-btn--sm"
                     >
                       編集
                     </Link>

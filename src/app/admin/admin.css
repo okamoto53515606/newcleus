@@ -68,6 +68,58 @@
   background: #e9ecef;
 }
 
+/* admin-content: トップバー + メインコンテンツを縦に並べるラッパー */
+.admin-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ========================================
+   トップバー（サイト切替）
+   ======================================== */
+.admin-topbar {
+  height: 52px;
+  border-bottom: 1px solid #dee2e6;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  flex-shrink: 0;
+}
+
+.admin-topbar__site-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto; /* 右寄せ */
+}
+
+.admin-topbar__label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.admin-topbar__select {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  background: #f8f9fa;
+  cursor: pointer;
+  min-width: 160px;
+  color: #495057;
+}
+
+.admin-topbar__select:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
 .admin-main {
   flex: 1;
   padding: 2rem;
@@ -140,7 +192,7 @@
    ======================================== */
 .admin-sidebar__user-area {
   padding: 0.75rem 1rem;
-  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6; /* 上部配置のため border-bottom に変更 */
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -325,6 +377,20 @@
 
 .admin-btn--danger:hover {
   background-color: #c82333;
+}
+
+.admin-btn--sm {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 400;
+}
+
+.admin-btn--sm:hover {
+  background-color: #e9ecef;
+  color: #212529;
 }
 
 .admin-btn[disabled] {

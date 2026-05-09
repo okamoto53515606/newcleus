@@ -51,24 +51,18 @@ export default async function TemplatesPage({
       <div className="flex items-center justify-between">
         <div>
           <nav className="text-sm text-gray-500 mb-1">
+            <Link href="/admin/sites" className="hover:underline text-gray-500">設定</Link>
+            {' / '}
+            <span className="text-gray-700">{site.name}</span>
+            {' / '}
             <Link href={`/admin/sites/${siteId}/content-types`} className="hover:underline text-gray-700">
-              {site.name}
-            </Link>{' '}
-            &gt;{' '}
-            <Link
-              href={`/admin/sites/${siteId}/content-types/${ctId}/edit`}
-              className="hover:underline text-gray-700"
-            >
-              {ct.name}
-            </Link>{' '}
-            &gt;{' '}
-            <span className="text-gray-700">テンプレート</span>
+              コンテンツタイプ一覧
+            </Link>
+            {' / '}
+            <span className="text-gray-900">テンプレート一覧</span>
           </nav>
-          <h1 className="text-2xl font-bold text-gray-900">{ct.name}のテンプレート</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            embed.js で使用する Handlebars テンプレートを管理します
-          </p>
-          <div className="mt-2 text-xs text-gray-400 font-mono space-y-0.5">
+          <h1 className="text-2xl font-bold text-gray-900">テンプレート一覧</h1>
+          <div className="mt-1 text-xs text-gray-400 font-mono space-y-0.5">
             <p>SITE_ID: {siteId}</p>
             <p>CT_ID: {ctId}</p>
           </div>
@@ -119,7 +113,7 @@ export default async function TemplatesPage({
                   <td className="px-6 py-4 text-right">
                     <Link
                       href={`/admin/sites/${siteId}/content-types/${ctId}/templates/${tmpl.templateId}/edit`}
-                      className="admin-btn text-xs"
+                      className="admin-btn admin-btn--sm"
                     >
                       編集
                     </Link>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
+import Link from 'next/link';
 import type { ContentTypeRecord, FieldDefinition } from '@/app/api/admin/sites/[siteId]/content-types/route';
 import { FieldEditor } from '../../components/field-editor';
 
@@ -19,16 +20,20 @@ export default function EditContentTypePage({
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
+  const [siteName, setSiteName] = useState('');
 
   useEffect(() => {
-    fetch(`/api/admin/sites/${siteId}/content-types/${ctId}`, { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((data: { contentType?: ContentTypeRecord }) => {
-        if (data.contentType) {
-          setName(data.contentType.name);
-          setDescription(data.contentType.description ?? '');
-          setFields(data.contentType.fields);
+    Promise.all([
+      fetch(`/api/admin/sites/${siteId}/content-types/${ctId}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/admin/sites/${siteId}`, { cache: 'no-store' }).then((r) => r.json()),
+    ])
+      .then(([ctData, siteData]: [{ contentType?: ContentTypeRecord }, { site?: { name: string } }]) => {
+        if (ctData.contentType) {
+          setName(ctData.contentType.name);
+          setDescription(ctData.contentType.description ?? '');
+          setFields(ctData.contentType.fields);
         }
+        setSiteName(siteData.site?.name ?? '');
         setFetching(false);
       })
       .catch(() => setFetching(false));
@@ -84,8 +89,18 @@ export default function EditContentTypePage({
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
+        <nav className="text-sm text-gray-500 mb-1">
+          <Link href="/admin/sites" className="hover:underline text-gray-500">設定</Link>
+          {' / '}
+          <span className="text-gray-700">{siteName || '…'}</span>
+          {' / '}
+          <Link href={`/admin/sites/${siteId}/content-types`} className="hover:underline text-gray-700">
+            コンテンツタイプ一覧
+          </Link>
+          {' / '}
+          <span className="text-gray-900">コンテンツタイプ編集</span>
+        </nav>
         <h1 className="text-2xl font-bold text-gray-900">コンテンツタイプ編集</h1>
-        <p className="text-sm text-gray-500 mt-1 font-mono">{ctId}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

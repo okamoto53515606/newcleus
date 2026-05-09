@@ -6,9 +6,11 @@
  * 未認証の場合は /admin/login にリダイレクト。
  * サイドナビゲーションメニューを表示。
  */
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/lib/admin-auth';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
+import { AdminTopbar } from '@/components/admin/admin-topbar';
 
 // package.json からバージョンを取得（サーバーサイドでのみ実行される）
 // why: Client Component へ渡す最小データに留めるためサーバー側で解決する
@@ -31,9 +33,16 @@ export default async function AdminProtectedLayout({
         role={adminUser.role}
         version={APP_VERSION}
       />
-      <main className="admin-main">
-        {children}
-      </main>
+      {/* admin-content: トップバー + メインコンテンツを縦に並べるラッパー */}
+      <div className="admin-content">
+        {/* useSearchParams を使うため Suspense でラップが必要 */}
+        <Suspense fallback={<div className="admin-topbar" />}>
+          <AdminTopbar />
+        </Suspense>
+        <main className="admin-main">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

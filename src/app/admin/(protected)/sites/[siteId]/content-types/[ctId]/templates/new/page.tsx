@@ -39,25 +39,22 @@ export default async function NewTemplatePage({
     <div className="space-y-6">
       <div>
         <nav className="text-sm text-gray-500 mb-1">
+          <Link href="/admin/sites" className="hover:underline text-gray-500">設定</Link>
+          {' / '}
+          <span className="text-gray-700">{site.name}</span>
+          {' / '}
           <Link href={`/admin/sites/${siteId}/content-types`} className="hover:underline text-gray-700">
-            {site.name}
-          </Link>{' '}
-          &gt;{' '}
-          <Link
-            href={`/admin/sites/${siteId}/content-types/${ctId}/edit`}
-            className="hover:underline text-gray-700"
-          >
-            {ct.name}
-          </Link>{' '}
-          &gt;{' '}
-          <Link
-            href={`/admin/sites/${siteId}/content-types/${ctId}/templates`}
-            className="hover:underline text-gray-700"
-          >
-            テンプレート
-          </Link>{' '}
-          &gt;{' '}
-          <span className="text-gray-700">新規</span>
+            コンテンツタイプ一覧
+          </Link>
+          {' / '}
+          <Link href={`/admin/sites/${siteId}/content-types/${ctId}/templates`} className="hover:underline text-gray-700">
+            テンプレート一覧
+          </Link>
+          {' / '}
+          <span className="text-gray-900">テンプレート新規作成</span>
+        </nav>
+        <h1 className="text-2xl font-bold text-gray-900">テンプレート新規作成</h1>
+      </div>
         </nav>
         <h1 className="text-2xl font-bold text-gray-900">テンプレート追加</h1>
       </div>
