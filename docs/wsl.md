@@ -141,22 +141,7 @@ sudo systemctl enable docker
 
 ## 4. ディスク・ネットワーク最適化（配布前のスリム化） (WSL)
 
-エクスポート前に行う「配布イメージを軽くする & ネットワークを安定化させる」掃除工程。`wsl --import` 後に手元で動かすだけなら省略可だが、**Release に上げる前の最終工程としては必須**。
-
-### 4-1. DNS の固定化
-
-WSL 既定の `resolv.conf` 自動生成は Windows 側のホスト DNS を引き継ぐ。配布先の環境に依存して `npm install` / `apt-get update` が DNS 失敗で詰まる事故を避けるため、Google Public DNS (`8.8.8.8`) を固定値で焼き込む。
-
-```bash
-sudo su -
-echo "" >> /etc/wsl.conf
-echo "[network]" >> /etc/wsl.conf
-echo "generateResolvConf = false" >> /etc/wsl.conf
-echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
-exit
-```
-
-> **why:** `[network] generateResolvConf = false` を設定しないと WSL 起動毎に `/etc/resolv.conf` が自動上書きされて `8.8.8.8` の固定が消える。
+エクスポート前に行う「配布イメージを軽くする」掃除工程。`wsl --import` 後に手元で動かすだけなら省略可だが、**Release に上げる前の最終工程としては必須**。
 
 ### 4-2. プリインストールパッケージの削除
 
