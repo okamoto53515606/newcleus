@@ -114,14 +114,14 @@
 
 <header class="page-header">
   <h1>🖼 フォトギャラリー — embed.js サンプル</h1>
-  <p>写真を1枚ずつ自動切換えするスライドショー（4秒間隔 / ドットナビ付き）</p>
+  <p>1枚ずつ表示・前へ／次へで切り替え</p>
 </header>
 
 <div class="container">
 
   <!-- ─── ライブデモ ─── -->
   <div class="demo-card">
-    <h2><span class="badge-live">LIVE</span> 動作サンプル（テストデータ 20件 を全表示）</h2>
+    <h2><span class="badge-live">LIVE</span> 動作サンプル（テストデータ 20件 を1枚ずつ表示）</h2>
 
     <!-- embed 本体 -->
     <div id="cms-gallery"></div>
@@ -130,7 +130,7 @@
       data-content-type="f682d39af9c98fbb6acb"
       data-template="slideshow"
       data-target="cms-gallery"
-      data-limit="20"
+      data-limit="1"
     ></script>
   </div>
 
@@ -149,7 +149,7 @@
   <span class="hl-attr">data-content-type</span>=<span class="hl-val">"f682d39af9c98fbb6acb"</span>
   <span class="hl-attr">data-template</span>=<span class="hl-val">"slideshow"</span>
   <span class="hl-attr">data-target</span>=<span class="hl-val">"cms-gallery"</span>
-  <span class="hl-attr">data-limit</span>=<span class="hl-val">"20"</span>
+  <span class="hl-attr">data-limit</span>=<span class="hl-val">"1"</span>
 <span class="hl-tag">&gt;&lt;/script&gt;</span></code></pre>
   </div>
 
@@ -162,7 +162,7 @@
       <tr><td><code>data-content-type</code></td><td class="req">必須</td><td>コンテンツタイプ ID</td><td>—</td></tr>
       <tr><td><code>data-template</code></td><td class="req">必須</td><td>テンプレートの shortname（例: <code>slideshow</code>）</td><td>—</td></tr>
       <tr><td><code>data-target</code></td><td class="opt">任意</td><td>挿入先要素の <code>id</code></td><td><code>cms-content</code></td></tr>
-      <tr><td><code>data-limit</code></td><td class="opt">任意</td><td>表示枚数（最大値で全件取得推奨）</td><td><code>5</code></td></tr>
+      <tr><td><code>data-limit</code></td><td class="opt">任意</td><td>1ページあたり表示枚数（<code>1</code> = 1枚ずつ切り替え表示）</td><td><code>5</code></td></tr>
       <tr><td><code>data-sort</code></td><td class="opt">任意</td><td><code>desc</code> / <code>asc</code>（撮影日順の場合は <code>asc</code>）</td><td><code>desc</code></td></tr>
       <tr><td><code>data-sort-by</code></td><td class="opt">任意</td><td>ソートキー。撮影日順に並べる場合は <code>createdAt</code></td><td><code>createdAt</code></td></tr>
     </table>
@@ -186,7 +186,7 @@
     <h2>利用可能なテンプレート shortname</h2>
     <table>
       <tr><th>shortname</th><th>説明</th></tr>
-      <tr><td><code>slideshow</code></td><td>1枚ずつ自動切換え（4秒間隔）。ドットナビゲーションで任意のコマにジャンプできます。</td></tr>
+      <tr><td><code>slideshow</code></td><td>1枚ずつ表示。前へ／次へボタンでページ切り替えします。</td></tr>
       <tr><td><code>detail</code></td><td>単一写真の詳細フラグメント。モーダル内表示などに利用できます。</td></tr>
     </table>
   </div>
