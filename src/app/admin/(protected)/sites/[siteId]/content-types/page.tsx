@@ -44,20 +44,20 @@ export default async function ContentTypesPage({
         <div>
           <nav className="text-sm text-gray-500 mb-1">
             <Link href="/admin/sites" className="hover:underline">
-              サイト管理
+              設定
             </Link>{' '}
             / <span className="text-gray-700">{site.name}</span>
           </nav>
           <h1 className="text-2xl font-bold text-gray-900">コンテンツタイプ</h1>
           <p className="text-sm text-gray-500 mt-1">
-            このサイトのコンテンツ定義を管理します
+            このサイトのコンテンツタイプ設定を行います
           </p>
         </div>
         <Link
           href={`/admin/sites/${siteId}/content-types/new`}
           className="admin-btn admin-btn--primary"
         >
-          + 新規CT
+          + 新規コンテンツタイプ
         </Link>
       </div>
 
@@ -68,7 +68,7 @@ export default async function ContentTypesPage({
             href={`/admin/sites/${siteId}/content-types/new`}
             className="admin-btn admin-btn--primary"
           >
-            最初のCTを作成する
+            最初のコンテンツタイプを作成する
           </Link>
         </div>
       ) : (

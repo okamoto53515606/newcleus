@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 import './admin.css';
 
 export const metadata: Metadata = {
-  title: 'サイト管理',
+  title: 'newcleus管理画面',
   description: '管理画面',
   robots: {
     index: false,

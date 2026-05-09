@@ -16,6 +16,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1032.0",
     "@aws-sdk/s3-request-presigner": "^3.1032.0",
     "@tailwindcss/postcss": "^4.2.4",
+    "@tinymce/tinymce-react": "^6.3.0",
     "browser-image-compression": "^2.0.2",
     "dotenv": "^16.5.0",
     "jose": "^6.2.2",

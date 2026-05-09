@@ -17,6 +17,29 @@ export interface FieldDefinition {
   type: 'text' | 'file' | 'flag' | 'date' | 'num';
 }
 
+function normalizeFieldType(raw: unknown): FieldDefinition['type'] {
+  switch (String(raw)) {
+    case 'text':
+    case 'textarea':
+    case 'richtext':
+    case 'select':
+      return 'text';
+    case 'file':
+    case 'image':
+      return 'file';
+    case 'flag':
+    case 'boolean':
+      return 'flag';
+    case 'date':
+      return 'date';
+    case 'num':
+    case 'number':
+      return 'num';
+    default:
+      return 'text';
+  }
+}
+
 /** コンテンツタイプのレコード */
 export interface ContentTypeRecord {
   siteId: string;
@@ -94,12 +117,7 @@ export async function POST(
     ? body.fields.map((f: Partial<FieldDefinition>) => ({
         fieldId: f.fieldId || randomBytes(6).toString('hex'),
         name: String(f.name ?? '').trim().slice(0, 50) || 'field',
-        type: (['text', 'textarea', 'richtext', 'number', 'boolean', 'date', 'image', 'select'] as const)
-          .includes(f.type as FieldDefinition['type'])
-          ? f.type!
-          : 'text',
-        required: Boolean(f.required),
-        options: Array.isArray(f.options) ? f.options.map(String).slice(0, 50) : undefined,
+        type: normalizeFieldType((f as { type?: unknown }).type),
       }))
     : [];
 

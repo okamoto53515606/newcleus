@@ -10,9 +10,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
+  Settings,
   Globe,
   ChevronLeft,
   ChevronRight,
@@ -20,15 +21,20 @@ import {
 
 const STORAGE_KEY = 'admin-sidebar-collapsed';
 
-const navItems = [
-  { href: '/admin', label: 'ダッシュボード', icon: LayoutDashboard },
-  { href: '/admin/sites', label: 'サイト管理', icon: Globe },
-];
+interface SiteSummary {
+  siteId: string;
+  name: string;
+}
 
 export function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [sites, setSites] = useState<SiteSummary[]>([]);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const activeSiteIdFromPath = pathname.match(/^\/admin\/sites\/([^/]+)/)?.[1] ?? null;
+  const activeSiteIdFromQuery = searchParams.get('siteId');
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -38,18 +44,46 @@ export function AdminSidebar() {
     setIsHydrated(true);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSites() {
+      try {
+        const res = await fetch('/api/admin/sites', { cache: 'no-store' });
+        const data = (await res.json()) as { sites?: SiteSummary[] };
+        if (cancelled) return;
+        setSites(data.sites ?? []);
+      } catch {
+        if (!cancelled) {
+          setSites([]);
+        }
+      }
+    }
+
+    void loadSites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const toggleCollapsed = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem(STORAGE_KEY, String(newState));
   };
 
-  const isActive = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin';
-    }
-    return pathname.startsWith(href);
-  };
+  const isDashboardActive = pathname === '/admin';
+  const isSettingsActive =
+    pathname === '/admin/sites' ||
+    pathname === '/admin/sites/new' ||
+    /^\/admin\/sites\/[^/]+\/edit$/.test(pathname) ||
+    /^\/admin\/sites\/[^/]+\/content-types(?:\/.*)?$/.test(pathname);
+
+  const effectiveActiveSiteId =
+    activeSiteIdFromQuery ||
+    activeSiteIdFromPath ||
+    (pathname === '/admin' ? sites[0]?.siteId : undefined);
 
   const collapsed = isHydrated ? isCollapsed : false;
 
@@ -69,18 +103,53 @@ export function AdminSidebar() {
 
       <nav className="admin-nav">
         <ul>
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={`admin-nav__link ${isActive(href) ? 'admin-nav__link--active' : ''}`}
-                title={collapsed ? label : undefined}
-              >
-                <Icon size={20} />
-                {!collapsed && <span>{label}</span>}
-              </Link>
-            </li>
-          ))}
+          <li>
+            <Link
+              href="/admin"
+              className={`admin-nav__link ${isDashboardActive ? 'admin-nav__link--active' : ''}`}
+              title={collapsed ? 'ダッシュボード' : undefined}
+            >
+              <LayoutDashboard size={20} />
+              {!collapsed && <span>ダッシュボード</span>}
+            </Link>
+          </li>
+        </ul>
+
+        {!collapsed && (
+          <>
+            <hr className="admin-nav__separator" />
+            <p className="text-xs text-gray-500 px-4 mb-2">サイト選択</p>
+            <ul>
+              {sites.map((site) => {
+                const active = effectiveActiveSiteId === site.siteId;
+                return (
+                  <li key={site.siteId}>
+                    <Link
+                      href={`/admin?siteId=${site.siteId}`}
+                      className={`admin-nav__link ${active ? 'admin-nav__link--active' : ''}`}
+                      title={site.name}
+                    >
+                      <Globe size={16} />
+                      <span className="truncate">{site.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+
+        <ul>
+          <li>
+            <Link
+              href="/admin/sites"
+              className={`admin-nav__link admin-nav__link--back ${isSettingsActive ? 'admin-nav__link--active' : ''}`}
+              title={collapsed ? '設定' : undefined}
+            >
+              <Settings size={20} />
+              {!collapsed && <span>設定</span>}
+            </Link>
+          </li>
         </ul>
       </nav>
     </aside>

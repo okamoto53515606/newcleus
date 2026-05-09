@@ -35,9 +35,9 @@ export default async function SitesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">サイト管理</h1>
+          <h1 className="text-2xl font-bold text-gray-900">設定</h1>
           <p className="text-sm text-gray-500 mt-1">
-            テナントサイトの一覧・新規作成・編集ができます
+            サイト登録（admin）とコンテンツタイプ設定（admin/siteadmin）を行います
           </p>
         </div>
         {user.role === 'admin' && (
@@ -89,7 +89,7 @@ export default async function SitesPage() {
                         href={`/admin/sites/${site.siteId}/content-types`}
                         className="admin-btn text-xs"
                       >
-                        CTを管理
+                        コンテンツタイプ設定
                       </Link>
                       <Link
                         href={`/admin/sites/${site.siteId}/edit`}

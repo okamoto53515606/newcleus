@@ -21,9 +21,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { logger } from '@/lib/env';
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || '';
-const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN || '';
 const REGION = process.env.AWS_REGION || 'ap-northeast-1';
-const IS_DEV = process.env.NODE_ENV !== 'production';
 
 /** アップロードサイズ上限: 10MB（Base64 前の元サイズ） */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -41,6 +39,16 @@ interface UploadPayload {
   filename?: string;
   contentType?: string;
   dataBase64?: string;
+}
+
+function toYYYYMMDDHHMMSS(date: Date): string {
+  const y = String(date.getUTCFullYear());
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(date.getUTCDate()).padStart(2, '0');
+  const hh = String(date.getUTCHours()).padStart(2, '0');
+  const mm = String(date.getUTCMinutes()).padStart(2, '0');
+  const ss = String(date.getUTCSeconds()).padStart(2, '0');
+  return `${y}${m}${d}${hh}${mm}${ss}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -97,7 +105,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const timestamp = Date.now();
+    const timestamp = toYYYYMMDDHHMMSS(new Date());
     const sanitizedFileName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `media/articles/${adminUser.sub || 'admin'}/${timestamp}-${sanitizedFileName}`;
 
@@ -109,10 +117,10 @@ export async function POST(request: NextRequest) {
       CacheControl: 'public, max-age=31536000, immutable',
     }));
 
-    // 公開 URL: 本番は相対パス（同一ドメイン）、開発は CloudFront ドメイン
-    const publicUrl = IS_DEV && CLOUDFRONT_DOMAIN
-      ? `https://${CLOUDFRONT_DOMAIN}/${key}`
-      : `/${key}`;
+    // 公開 URL は常に相対パスを返す。
+    // why: 管理画面のオリジンを統一し、ブラウザの CORP 判定で画像が
+    //      ブロックされるケースを避ける。
+    const publicUrl = `/${key}`;
 
     logger.info(`[Upload] S3 アップロード完了: ${key} (${buffer.length} bytes)`);
 
