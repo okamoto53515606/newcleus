@@ -61,7 +61,7 @@ export function AdminTopbar() {
       {!hideSiteSwitch && (
         <div className="admin-topbar__site-switcher">
           <label className="admin-topbar__label" htmlFor="site-switcher">
-            サイト
+            サイトを切替
           </label>
           <select
             id="site-switcher"
