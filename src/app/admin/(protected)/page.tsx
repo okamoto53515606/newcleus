@@ -57,13 +57,12 @@ export default async function AdminDashboardPage({
   return (
     <div className="space-y-6">
       <header className="admin-page-header">
-        <h1>ダッシュボード</h1>
-        <p>選択中サイトのコンテンツタイプ一覧から記事一覧へ移動できます。</p>
+        <h1>記事管理</h1>
       </header>
 
       <div className="admin-card">
         <h2 className="text-lg font-semibold text-gray-900">
-          {selectedSite ? `${selectedSite.name} のコンテンツタイプ` : 'サイトがありません'}
+          {selectedSite ? `${selectedSite.name} のコンテンツタイプ一覧` : 'サイトがありません'}
         </h2>
 
         {!selectedSite ? (
@@ -81,14 +80,21 @@ export default async function AdminDashboardPage({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
             {contentTypes.map((ct) => (
-              <Link
+              <div
                 key={ct.ctId}
-                href={`/admin/sites/${selectedSite.siteId}/items?contentTypeId=${ct.ctId}`}
-                className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50/40 transition-colors"
+                className="border border-gray-200 rounded-lg p-4 flex flex-col gap-2"
               >
                 <p className="text-sm font-semibold text-gray-900">{ct.name}</p>
-                <p className="text-xs text-gray-500 mt-1">クリックで記事一覧を表示</p>
-              </Link>
+                <p className="text-xs text-gray-400">
+                  SITE_ID: {selectedSite.siteId} / CT_ID: {ct.ctId}
+                </p>
+                <Link
+                  href={`/admin/sites/${selectedSite.siteId}/items?contentTypeId=${ct.ctId}`}
+                  className="admin-btn admin-btn--sm mt-auto self-start"
+                >
+                  記事一覧
+                </Link>
+              </div>
             ))}
           </div>
         )}
