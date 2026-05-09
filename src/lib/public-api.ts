@@ -229,13 +229,42 @@ export interface PublicItem {
   updatedAt: string;
 }
 
-export function toPublicItem(item: ItemRecord, ct: ContentTypeRecord): PublicItem {
+/**
+ * 相対 /media/ URL を絶対 URL に書き換える
+ *
+ * why: アップロード API が以前は相対パスを返していたため、DB 内に
+ *      /media/... の相対 URL が保存されている場合がある。
+ *      JSON API レスポンスでもこれを絶対 URL に変換し、外部サイトへの
+ *      embed.js 埋め込み時に画像リンク切れにならないようにする。
+ *      origin が空の場合（開発環境 fallback など）は書き換えしない。
+ */
+export function rewriteMediaUrl(value: string, origin: string): string {
+  if (!origin || !value) return value;
+  // HTML body 内の属性値 (src/href) と CSS url() の /media/ を書き換える
+  let out = value.replace(/((?:src|href|action)=")(\/media\/)/g, `$1${origin}$2`);
+  out = out.replace(/(url\(["']?)(\/media\/)/g, `$1${origin}$2`);
+  // プレーンな /media/ URL（file フィールド等）を書き換える
+  if (out.startsWith('/media/')) out = origin + out;
+  return out;
+}
+
+export function toPublicItem(item: ItemRecord, ct: ContentTypeRecord, origin = ''): PublicItem {
+  const body = rewriteMediaUrl(item.body ?? '', origin);
+
+  // file* フィールドに含まれる相対 URL を絶対 URL に書き換える
+  const fields = { ...(item.fields ?? {}) } as Record<string, unknown>;
+  for (const key of Object.keys(fields)) {
+    if (key.startsWith('file') && typeof fields[key] === 'string') {
+      fields[key] = rewriteMediaUrl(fields[key] as string, origin);
+    }
+  }
+
   return {
     id: item.itemId,
     title: item.title,
-    body: item.body,
+    body,
     contentType: { id: ct.ctId, name: ct.name },
-    fields: (item.fields ?? {}) as Record<string, unknown>,
+    fields,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };

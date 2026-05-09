@@ -13,6 +13,8 @@
 | Phase 1 | プロジェクト雛形・不要物削除・DynamoDB設計 | ✅ 完了 |
 | Phase 2 | setupアプリ + 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | ✅ 完了 |
 | Phase 3 | 記事CRUD + TinyMCE 7 エディタ + 画像アップロード(S3) + 汎用フィールド + テンプレート管理 | ✅ 実装済み |
+| Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
+| Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
 | Phase 6 | テナント管理: siteadmin 管理（Cognito API） | ✅ 完了 |
 
 #### setup 画面の完了状況
@@ -35,8 +37,6 @@
 
 | フェーズ | 内容 |
 |---------|------|
-| Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
-| Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
 | Phase 7 | サイト追加時にいくつかのコンテンツタイプ＋テンプレート（お知らせとフォトギャラリー）を初期セットしたい。|
 
 ## 記述方針（必須）

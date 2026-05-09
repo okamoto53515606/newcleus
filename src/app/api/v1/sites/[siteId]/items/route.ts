@@ -179,11 +179,11 @@ export async function GET(
   const total = items.length;
   const start = (page - 1) * limit;
   const pagedItems = items.slice(start, start + limit);
-  const publicItems = pagedItems.map((item) => toPublicItem(item, ct));
-
   const origin = getPublicOrigin(req);
   const baseUrl = `${origin}/api/v1/sites/${siteId}/items`;
   const tools = buildTools(total, page, limit, baseUrl, sp);
+
+  const publicItems = pagedItems.map((item) => toPublicItem(item, ct, origin));
 
   return NextResponse.json(
     { items: publicItems, total, page, limit, tools },

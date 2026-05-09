@@ -17,6 +17,7 @@ import {
   toPublicItem,
 } from '@/lib/public-api';
 import { getDocClient, Tables } from '@/lib/dynamodb';
+import { getPublicOrigin } from '@/lib/origin';
 import type { ItemRecord } from '@/app/api/admin/sites/[siteId]/items/route';
 
 export const dynamic = 'force-dynamic';
@@ -62,5 +63,5 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORS_HEADERS });
   }
 
-  return NextResponse.json({ item: toPublicItem(item, ct) }, { headers: CORS_HEADERS });
+  return NextResponse.json({ item: toPublicItem(item, ct, getPublicOrigin(_req)) }, { headers: CORS_HEADERS });
 }
