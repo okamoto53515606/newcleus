@@ -12,7 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser } from '@/lib/admin-auth';
+import { getAdminUser, clearCognitoAttrCache } from '@/lib/admin-auth';
 import {
   CognitoIdentityProviderClient,
   AdminUpdateUserAttributesCommand,
@@ -116,6 +116,10 @@ export async function PUT(
       ],
     }),
   );
+
+  // why: siteIds 更新後に同一 Lambda インスタンス内のキャッシュを即時クリアする。
+  //      異なる Lambda インスタンスの場合は TTL(10s) 経過後に自動反映される。
+  clearCognitoAttrCache(username);
 
   return NextResponse.json({ ok: true });
 }

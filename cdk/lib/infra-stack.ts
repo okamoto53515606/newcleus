@@ -172,14 +172,18 @@ export class InfraStack extends cdk.Stack {
       ],
     }));
 
-    // Cognito AdminGetUser 権限
-    // why: admin-auth.ts は ID トークンの custom:* claim に依存せず、
-    //      JWT の sub を起点として AdminGetUser API でサーバー側から
-    //      最新の custom:role / custom:siteIds を取得する。
-    //      これにより App Client の ReadAttributes 設定に依存せず、
-    //      かつロール変更が即時に反映される（セキュリティ強化）。
+    // Cognito 権限
+    // why: admin-auth.ts は AdminGetUser で認証（全ロール共通）。
+    //      テナント管理画面は ListUsers / AdminCreateUser / AdminUpdateUserAttributes /
+    //      AdminDeleteUser を使用する。Lambda 実行ロールにまとめて付与する。
     appLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['cognito-idp:AdminGetUser'],
+      actions: [
+        'cognito-idp:AdminGetUser',
+        'cognito-idp:ListUsers',
+        'cognito-idp:AdminCreateUser',
+        'cognito-idp:AdminUpdateUserAttributes',
+        'cognito-idp:AdminDeleteUser',
+      ],
       resources: [
         `arn:aws:cognito-idp:${this.region}:${this.account}:userpool/*`,
       ],

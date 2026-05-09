@@ -80,13 +80,31 @@ function getJwks() {
 // Cognito AdminGetUser 結果のインメモリキャッシュ
 // why: Lambda ウォームスタート間でモジュール変数は保持される。
 //      リクエストごとに Cognito API を叩くと 100〜200ms のレイテンシーが発生するため
-//      60 秒 TTL のキャッシュを挟む。ロール変更は最大 60 秒後に反映される。
+//      TTL のキャッシュを挟む。
+// キャッシュキーは cognitoUsername（= Cognito の Username / メールアドレス）。
+// why username: sub ではなく username をキーにすることで、
+//   admin が siteIds を更新した直後に clearCognitoAttrCache(username) で
+//   即時無効化できる（同 Lambda インスタンス内）。
+// 複数 Lambda インスタンス間の一貫性は TTL（10 秒）で担保する。
 interface CognitoAttrCache {
   role?: string;
   siteIds?: string[];
   expiresAt: number;
 }
-const _attrCache = new Map<string, CognitoAttrCache>();
+const _attrCache = new Map<string, CognitoAttrCache>(); // key: cognitoUsername
+
+/**
+ * 指定ユーザーのキャッシュを即時無効化する
+ *
+ * why: admin がテナントの siteIds を更新した直後に呼ぶことで、
+ *      同一 Lambda インスタンスでは次リクエストから新しい属性が反映される。
+ *      異なる Lambda インスタンスは TTL（10 秒）経過後に自動更新される。
+ *
+ * @param cognitoUsername - Cognito の Username（メールアドレス）
+ */
+export function clearCognitoAttrCache(cognitoUsername: string): void {
+  _attrCache.delete(cognitoUsername);
+}
 
 /**
  * Cognito AdminGetUser API で sub に紐づく custom 属性を取得する
@@ -105,10 +123,13 @@ async function lookupCognitoAttributes(
   sub: string
 ): Promise<{ role?: string; siteIds?: string[] }> {
   const now = Date.now();
-  const cached = _attrCache.get(sub);
+  // キャッシュキーは cognitoUsername（sub ではなく）
+  const cached = _attrCache.get(cognitoUsername);
   if (cached && cached.expiresAt > now) {
     return { role: cached.role, siteIds: cached.siteIds };
   }
+  // sub は使用しないが引数シグネチャは維持（呼び出し元との互換性）
+  void sub;
 
   const userPoolId = process.env.COGNITO_USER_POOL_ID!;
   const region = userPoolId.split('_')[0];
@@ -129,9 +150,9 @@ async function lookupCognitoAttributes(
       if (!raw) return undefined;
       try { return JSON.parse(raw) as string[]; } catch { return undefined; }
     })(),
-    expiresAt: now + 60_000, // 60 秒 TTL
+    expiresAt: now + 10_000, // 10 秒 TTL（複数 Lambda インスタンス間の最大遅延）
   };
-  _attrCache.set(sub, result);
+  _attrCache.set(cognitoUsername, result);
   return { role: result.role, siteIds: result.siteIds };
 }
 
