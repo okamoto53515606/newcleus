@@ -87,14 +87,14 @@ export default async function SitesPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/admin/sites/${site.siteId}/content-types`}
-                        className="admin-btn text-xs"
+                        className="admin-btn admin-btn--sm"
                       >
                         コンテンツタイプ設定
                       </Link>
                       {user.role === 'admin' && (
                         <Link
                           href={`/admin/sites/${site.siteId}/edit`}
-                          className="admin-btn text-xs"
+                          className="admin-btn admin-btn--sm"
                         >
                           編集
                         </Link>

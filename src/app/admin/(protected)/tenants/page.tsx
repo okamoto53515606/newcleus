@@ -149,7 +149,7 @@ export default async function TenantsPage() {
                     <td className="px-6 py-4 text-right">
                       <Link
                         href={`/admin/tenants/${encodeURIComponent(tenant.userId)}/edit`}
-                        className="admin-btn text-xs"
+                        className="admin-btn admin-btn--sm"
                       >
                         編集
                       </Link>

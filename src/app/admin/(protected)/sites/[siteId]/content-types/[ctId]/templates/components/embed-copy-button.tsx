@@ -54,7 +54,7 @@ export default function EmbedCopyButton({ siteId, ctId, shortname, origin }: Emb
     <button
       type="button"
       onClick={handleCopy}
-      className={`admin-btn text-xs ${copied ? 'text-green-700' : ''}`}
+      className={`admin-btn admin-btn--sm ${copied ? 'text-green-700' : ''}`}
       title={embedTag}
     >
       {copied ? 'コピー済み ✓' : 'embedタグをコピー'}

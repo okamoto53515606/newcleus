@@ -104,7 +104,7 @@ export function FieldEditor({ fields, onChange }: Props) {
         </div>
       ))}
 
-      <button type="button" onClick={addField} className="admin-btn text-xs w-full">
+      <button type="button" onClick={addField} className="admin-btn admin-btn--sm w-full">
         + フィールドを追加
       </button>
     </div>

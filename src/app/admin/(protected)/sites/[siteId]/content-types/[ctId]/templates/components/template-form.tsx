@@ -100,7 +100,7 @@ function EmbedTagBlock({
         <button
           type="button"
           onClick={handleCopy}
-          className={`admin-btn text-xs ${copied ? 'text-green-700' : ''}`}
+          className={`admin-btn admin-btn--sm ${copied ? 'text-green-700' : ''}`}
         >
           {copied ? 'コピー済み ✓' : 'コピー'}
         </button>
@@ -505,7 +505,7 @@ export default function TemplateForm({ siteId, ctId, initial, fields }: Template
             type="button"
             onClick={handlePreview}
             disabled={previewing || body.trim().length === 0}
-            className="admin-btn text-sm"
+            className="admin-btn admin-btn--sm"
           >
             {previewing ? 'レンダリング中...' : 'プレビュー'}
           </button>
@@ -537,7 +537,7 @@ export default function TemplateForm({ siteId, ctId, initial, fields }: Template
               type="button"
               onClick={handleDelete}
               disabled={saving}
-              className="admin-btn text-red-600 border-red-300 hover:bg-red-50"
+              className="admin-btn admin-btn--sm text-red-600 border-red-300 hover:bg-red-50"
             >
               削除
             </button>
@@ -554,7 +554,7 @@ export default function TemplateForm({ siteId, ctId, initial, fields }: Template
           <button
             type="button"
             onClick={() => setPreviewHtml(null)}
-            className="admin-btn text-sm"
+            className="admin-btn admin-btn--sm"
           >
             閉じる
           </button>
