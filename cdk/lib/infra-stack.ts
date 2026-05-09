@@ -290,6 +290,9 @@ export class InfraStack extends cdk.Stack {
         accessControlAllowOrigins: ['*'],
         accessControlAllowMethods: ['GET', 'HEAD'],
         accessControlAllowHeaders: ['*'],
+        // why: credentials（Cookie/Authorization）は不要（公開メディア）。
+        //      Access-Control-Allow-Origin: * と credentials: true は共存不可のため false。
+        accessControlAllowCredentials: false,
         accessControlMaxAge: cdk.Duration.seconds(600),
         originOverride: false,
       },
