@@ -32,18 +32,10 @@
 
 | フェーズ | 内容 |
 |---------|------|
-| Phase 3 | 記事CRUD + TinyMCE 7 エディタ + 画像アップロード(S3) + 汎用フィールド + テンプレート管理 |
 | Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
 | Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
 | Phase 6 | テナント管理: siteadmin 管理（Cognito API）|
-| Phase 7 | コンテンツタイプ fieldLabels 定義 + 動的フォーム生成 + テンプレートエディタ |
-
-### 次セッションで着手すべき作業
-
-#### 【Step 3】Phase 3 の実装開始
-
-`src/app/admin/(protected)/sites/[siteId]/items/` 配下に記事一覧・作成・編集ページを実装する。  
-参照: `docs/blueprint.md § 5.5 記事管理` および `docs/database-schema.md`
+| Phase 7 | 活用パターン別サンプルデータ（コンテンツタイプ、ダミー記事、テンプレート）を作成したい |
 
 ## 記述方針（必須）
 

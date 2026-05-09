@@ -198,7 +198,6 @@ Nucleusの `template` テーブルに相当。
 | `name` | `S` | ○ | テンプレート名 (例: "お知らせ一覧", "ティッカー") | `tdname` |
 | `shortname` | `S` | ○ | API用識別名 (英数字ハイフン, 例: "list", "ticker") | — |
 | `body` | `S` | ○ | HandlebarsテンプレートHTML | `tparttype` (BODY等) |
-| `isDefault` | `BOOL` | ○ | デフォルトテンプレートか | — |
 | `createdAt` | `S` | ○ | 作成日時（ISO 8601） | — |
 | `updatedAt` | `S` | ○ | 更新日時（ISO 8601） | — |
 
@@ -218,7 +217,7 @@ Nucleusの `template` テーブルに相当。
 
 ### セキュリティ
 
-- テンプレート保存時に `<script>` タグ・`on*` イベント属性をサニタイズ除去
+- テンプレート保存時に `on*` イベント属性をサニタイズ除去（`<script>` タグは管理者記述の信頼済みコンテンツのため許可）
 - `{{{body}}}` (エスケープなし出力) は記事本文のHTML表示用に許可
 
 ### テンプレート例

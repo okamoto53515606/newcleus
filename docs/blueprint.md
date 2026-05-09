@@ -223,7 +223,7 @@
 
 ```
 GET /api/v1/sites/{siteId}/items
-  ?contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
+  ?contentType={contentTypeId}  コンテンツタイプフィルタ (必須)
   &limit={number}           取得件数 (デフォルト10, 最大100)
   &page={number}            ページ番号 (デフォルト1)
   &sort={order}             日付ソート (desc または asc, デフォルトdesc)
@@ -234,16 +234,17 @@ GET /api/v1/sites/{siteId}/items/{itemId}
 
 GET /api/v1/sites/{siteId}/embed.js
   ?target={elementId}       描画先DOM要素ID (デフォルト "cms-content")
-  &contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
-  &template={templateName}  テンプレート名 (任意、未指定時はデフォルトテンプレート)
+  &contentType={contentTypeId}  コンテンツタイプフィルタ (必須)
+  &template={templateShortname}  テンプレート shortname (必須。例: list-modal, list-simple)
   &limit={number}           表示件数 (デフォルト5)
   &flag0=1                  汎用フラグフィルタ (任意)
 
 GET /api/v1/sites/{siteId}/render
-  ?contentType={contentTypeId}  コンテンツタイプフィルタ (任意)
-  &template={templateName}  テンプレート名 (任意、未指定時はデフォルトテンプレート)
+  ?contentType={contentTypeId}  コンテンツタイプフィルタ (必須)
+  &template={templateShortname}  テンプレート shortname (必須。例: list-modal, detail)
   &limit={number}           取得件数 (デフォルト10)
   &flag0=1                  汎用フラグフィルタ (任意)
+  → template 未指定時は 400 エラー（利用可能な shortname 一覧を案内）
   → Content-Type: text/html でテンプレート適用済HTMLを返却
   → マッチする記事が0件の場合、空のHTMLを返却
 ```

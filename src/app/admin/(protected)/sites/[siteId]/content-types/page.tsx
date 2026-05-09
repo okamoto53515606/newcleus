@@ -103,7 +103,13 @@ export default async function ContentTypesPage({
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(ct.updatedAt).toLocaleDateString('ja-JP')}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right space-x-2">
+                    <Link
+                      href={`/admin/sites/${siteId}/content-types/${ct.ctId}/templates`}
+                      className="admin-btn text-xs"
+                    >
+                      テンプレート
+                    </Link>
                     <Link
                       href={`/admin/sites/${siteId}/content-types/${ct.ctId}/edit`}
                       className="admin-btn text-xs"
