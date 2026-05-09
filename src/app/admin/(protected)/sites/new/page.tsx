@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchWithSigning } from '@/lib/fetch';
 
 export default function NewSitePage() {
   const router = useRouter();
@@ -15,9 +16,8 @@ export default function NewSitePage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/sites', {
+      const res = await fetchWithSigning('/api/admin/sites', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
       const data = await res.json();

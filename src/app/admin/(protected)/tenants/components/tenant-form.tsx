@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchWithSigning } from '@/lib/fetch';
 
 interface SiteSummary {
   siteId: string;
@@ -56,15 +57,13 @@ export function TenantForm({
     try {
       let res: Response;
       if (mode === 'new') {
-        res = await fetch('/api/admin/tenants', {
+        res = await fetchWithSigning('/api/admin/tenants', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, temporaryPassword: tempPassword, siteIds: selectedSiteIds }),
         });
       } else {
-        res = await fetch(`/api/admin/tenants/${userId}`, {
+        res = await fetchWithSigning(`/api/admin/tenants/${userId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ siteIds: selectedSiteIds }),
         });
       }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
+import { fetchWithSigning } from '@/lib/fetch';
 import Link from 'next/link';
 import type { FieldDefinition } from '@/app/api/admin/sites/[siteId]/content-types/route';
 import { FieldEditor } from '../components/field-editor';
@@ -43,9 +44,8 @@ export default function NewContentTypePage({
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/sites/${siteId}/content-types`, {
+      const res = await fetchWithSigning(`/api/admin/sites/${siteId}/content-types`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description, fields }),
       });
       const data = await res.json();

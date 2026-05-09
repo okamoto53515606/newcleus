@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { SiteRecord } from '@/app/api/admin/sites/route';
+import { fetchWithSigning } from '@/lib/fetch';
 
 export default function EditSitePage({ params }: { params: Promise<{ siteId: string }> }) {
   const router = useRouter();
@@ -39,9 +40,8 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/admin/sites/${siteId}`, {
+      const res = await fetchWithSigning(`/api/admin/sites/${siteId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
       const data = await res.json();
