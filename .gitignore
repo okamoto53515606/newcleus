@@ -65,6 +65,3 @@ cdk-outputs.json
 
 # .sample-files
 *.sample-files
-
-# prompt history (may contain credentials from conversation logs)
-prompt_history/
