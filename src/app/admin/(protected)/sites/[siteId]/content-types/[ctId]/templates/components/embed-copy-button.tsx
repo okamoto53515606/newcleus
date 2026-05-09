@@ -21,13 +21,16 @@ interface EmbedCopyButtonProps {
 export default function EmbedCopyButton({ siteId, ctId, shortname, origin }: EmbedCopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
+  const isSlideshow = shortname === 'slideshow';
+  const defaultLimit = isSlideshow ? '1' : '10';
+
   const embedTag = `<div id="cms-content"></div>
 <script
   src="${origin}/api/v1/sites/${siteId}/embed.js"
   data-content-type="${ctId}"
   data-template="${shortname}"
   data-target="cms-content"
-  data-limit="10"
+  data-limit="${defaultLimit}"
 ></script>`;
 
   const handleCopy = async () => {

@@ -330,6 +330,19 @@ foreach ($data['items'] as $item) {
 
 ---
 
+## 7. ライブデモ
+
+以下のサンプルページで embed.js の動作を確認できます（GitHub Pages でホスト）。
+
+| ページ | URL |
+|--------|-----|
+| お知らせ（list-modal テンプレート） | https://okamoto53515606.github.io/newcleus/embed-samples/news.html |
+| フォトギャラリー（slideshow テンプレート） | https://okamoto53515606.github.io/newcleus/embed-samples/photogallery.html |
+
+> データは CloudFront (`d1sax4j5hw821p.cloudfront.net`) の検証環境に接続しています。
+
+---
+
 ## 8. 開発環境
 
 - **開発マシン:** WSL (Ubuntu 22)

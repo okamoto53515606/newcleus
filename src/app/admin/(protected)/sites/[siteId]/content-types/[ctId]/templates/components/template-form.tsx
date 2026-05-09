@@ -53,16 +53,12 @@ function EmbedTagBlock({
 }: { origin: string; siteId: string; ctId: string; shortname: string }) {
   const [copied, setCopied] = useState(false);
   const isDetail = shortname.includes('detail');
+  const isSlideshow = shortname === 'slideshow';
+  const defaultLimit = isSlideshow ? '1' : '10';
 
-  const listTag = `<div id="cms-content"></div>
-<script
-  src="${origin}/api/v1/sites/${siteId}/embed.js"
-  data-content-type="${ctId}"
-  data-template="${shortname}"
-  data-target="cms-content"
-  data-limit="10"
-  data-modal-template="detail"
-></script>`;
+  const listTag = isSlideshow
+    ? `<div id="cms-content"></div>\n<script\n  src="${origin}/api/v1/sites/${siteId}/embed.js"\n  data-content-type="${ctId}"\n  data-template="${shortname}"\n  data-target="cms-content"\n  data-limit="${defaultLimit}"\n></script>`
+    : `<div id="cms-content"></div>\n<script\n  src="${origin}/api/v1/sites/${siteId}/embed.js"\n  data-content-type="${ctId}"\n  data-template="${shortname}"\n  data-target="cms-content"\n  data-limit="${defaultLimit}"\n  data-modal-template="detail"\n></script>`;
 
   const detailTag = `<div id="cms-content"></div>
 <script

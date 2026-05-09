@@ -30,7 +30,7 @@ function buildNewsListModal(ctId: string): string {
 .ct-${ctId} .nc-date { color: #888; font-size: .875rem; white-space: nowrap; }
 .ct-${ctId} .nc-title { cursor: pointer; color: #0066cc; }
 .ct-${ctId} .nc-title:hover { text-decoration: underline; }
-.ct-${ctId} .nc-pager { display: flex; gap: 8px; margin-top: 1em; }
+.ct-${ctId} .nc-pager { display: flex; justify-content: space-between; margin-top: 1em; }
 .ct-${ctId} .nc-pager a { color: #0066cc; text-decoration: none; }
 .ct-${ctId} .nc-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9999; align-items: center; justify-content: center; }
 .ct-${ctId} .nc-modal-overlay.is-open { display: flex; }
@@ -47,8 +47,8 @@ function buildNewsListModal(ctId: string): string {
   {{/each}}
 
   <div class="nc-pager">
-    {{#if tools.hasPrev}}<a data-cms-paginate href="{{tools.prevHref}}">前へ</a>{{/if}}
-    {{#if tools.hasNext}}<a data-cms-paginate href="{{tools.nextHref}}">次へ</a>{{/if}}
+    <span>{{#if tools.hasPrev}}<a data-cms-paginate href="{{tools.prevHref}}">前へ</a>{{/if}}</span>
+    <span>{{#if tools.hasNext}}<a data-cms-paginate href="{{tools.nextHref}}">次へ</a>{{/if}}</span>
   </div>
 
   <div class="nc-modal-overlay">
@@ -82,74 +82,36 @@ function buildNewsDetail(): string {
 /**
  * フォトギャラリー — スライドショーテンプレート
  *
- * why: 写真を1枚ずつ全幅で表示し、一定間隔で自動的に切り替えるカルーセル。
- *      ドットナビゲーションで任意のコマに移動できる。
- *      embed.js が execScripts() で <script> を再実行するため、
- *      IIFE で書くことでページに複数埋め込まれても競合しない。
- *      ID に {{tools.currentPage}} を含めることで同一ページ内の複数インスタンスを区別する。
+ * why: スライダー（全件 DOM に乗せて translateX で切り替え）はスマホで縦長になる問題があった。
+ *      limit=1 で1件ずつサーバーからフェッチし、data-cms-paginate で前/次ページに切り替える
+ *      シンプルな構成に変更。max-height: 60vh + object-fit: contain で高さを固定する。
  */
 function buildGallerySlideshow(ctId: string): string {
   return `<style>
-.ct-${ctId}-sw { overflow: hidden; position: relative; }
-.ct-${ctId}-sw .nc-track { display: flex; transition: transform 0.5s ease; }
-.ct-${ctId}-sw .nc-slide { min-width: 100%; flex-shrink: 0; text-align: center; }
-.ct-${ctId}-sw .nc-slide img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.ct-${ctId}-sw .nc-caption { padding: 6px 0 2px; color: #555; font-size: .875rem; }
-.ct-${ctId}-sw .nc-shot-date { color: #999; font-size: .8rem; }
-.ct-${ctId}-sw .nc-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-.ct-${ctId}-sw .nc-dot { width: 9px; height: 9px; border-radius: 50%; background: #ccc; cursor: pointer; border: none; padding: 0; transition: background .2s; }
-.ct-${ctId}-sw .nc-dot.is-active { background: #555; }
+.ct-${ctId}-gv { text-align: center; }
+.ct-${ctId}-gv .nc-photo img { max-width: 100%; max-height: 60vh; width: auto; height: auto; display: block; margin: 0 auto; border-radius: 4px; object-fit: contain; }
+.ct-${ctId}-gv .nc-caption { margin-top: 8px; color: #555; font-size: .875rem; }
+.ct-${ctId}-gv .nc-shot-date { color: #999; font-size: .8rem; margin-top: 2px; }
+.ct-${ctId}-gv .nc-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; min-height: 2em; }
+.ct-${ctId}-gv .nc-nav a { color: #555; text-decoration: none; padding: 6px 14px; border: 1px solid #ddd; border-radius: 4px; font-size: .875rem; }
+.ct-${ctId}-gv .nc-nav a:hover { background: #f5f5f5; }
+.ct-${ctId}-gv .nc-counter { color: #888; font-size: .8rem; }
 </style>
 
-<div class="ct-${ctId}-sw" id="nc-sw-${ctId}-{{tools.currentPage}}">
-  <div class="nc-track">
-    {{#each items}}
-    <div class="nc-slide">
-      {{#if fields.file0}}<img src="{{fields.file0}}" alt="{{title}}">{{/if}}
-      <p class="nc-caption">{{#if fields.text0}}{{fields.text0}}{{else}}{{title}}{{/if}}</p>
-      {{#if fields.date0}}<p class="nc-shot-date">{{formatDate fields.date0 "YYYY年MM月DD日"}}</p>{{/if}}
-    </div>
-    {{/each}}
+{{#each items}}
+<div class="ct-${ctId}-gv">
+  <div class="nc-photo">
+    {{#if fields.file0}}<img src="{{fields.file0}}" alt="{{title}}">{{/if}}
   </div>
-
-  <div class="nc-dots">
-    {{#each items}}
-    <button class="nc-dot{{#if @first}} is-active{{/if}}" data-idx="{{@index}}" aria-label="{{@index}}枚目"></button>
-    {{/each}}
+  <p class="nc-caption">{{#if fields.text0}}{{fields.text0}}{{else}}{{title}}{{/if}}</p>
+  {{#if fields.date0}}<p class="nc-shot-date">{{formatDate fields.date0 "YYYY年MM月DD日"}}</p>{{/if}}
+  <div class="nc-nav">
+    <span>{{#if ../tools.hasPrev}}<a data-cms-paginate href="{{../tools.prevHref}}">&#8249; 前の写真</a>{{/if}}</span>
+    <span class="nc-counter">{{../tools.currentPage}} / {{../tools.totalPages}}</span>
+    <span>{{#if ../tools.hasNext}}<a data-cms-paginate href="{{../tools.nextHref}}">次の写真 &#8250;</a>{{/if}}</span>
   </div>
 </div>
-
-<script>
-(function () {
-  var el = document.getElementById('nc-sw-${ctId}-{{tools.currentPage}}');
-  if (!el) return;
-  var track = el.querySelector('.nc-track');
-  var dots  = el.querySelectorAll('.nc-dot');
-  var total = dots.length;
-  if (!track || total <= 1) return;
-
-  var current = 0;
-  function goTo(n) {
-    current = (n + total) % total;
-    track.style.transform = 'translateX(-' + (current * 100) + '%)';
-    for (var i = 0; i < dots.length; i++) {
-      dots[i].classList.toggle('is-active', i === current);
-    }
-  }
-
-  for (var i = 0; i < dots.length; i++) {
-    (function (n) {
-      dots[n].addEventListener('click', function () { goTo(n); resetTimer(); });
-    })(i);
-  }
-
-  var timer = setInterval(function () { goTo(current + 1); }, 4000);
-  function resetTimer() {
-    clearInterval(timer);
-    timer = setInterval(function () { goTo(current + 1); }, 4000);
-  }
-})();
-</script>`;
+{{/each}}`;
 }
 
 /**
