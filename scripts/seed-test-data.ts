@@ -310,8 +310,10 @@ async function seedNews(): Promise<void> {
 
     console.log(`\n[${i + 1}/${NEWS_ITEMS.length}] ${d.title}`);
 
-    // 画像DL → S3アップロード（スキーマ §5: sites/{siteId}/items/{itemId}/{ts}-{name}.jpg）
-    const imgKey = `sites/${SITE_ID}/items/${itemId}/${ts}-news.jpg`;
+    // 画像DL → S3アップロード
+    // why: CloudFront は /media/* を S3 origin にルーティングする。
+    //      media/ プレフィックスがないとデフォルト behavior（Lambda）に飛んで 404 になる。
+    const imgKey = `media/sites/${SITE_ID}/items/${itemId}/${ts}-news.jpg`;
     const imgBuf = await downloadImage(d.seed, 800, 500);
     const imgUrl = await uploadS3(imgKey, imgBuf);
 
@@ -353,8 +355,9 @@ async function seedGallery(): Promise<void> {
 
     console.log(`\n[${i + 1}/${GALLERY_ITEMS.length}] ${d.title}`);
 
-    // 画像DL → S3アップロード（スキーマ §5: sites/{siteId}/fields/{itemId}/file0-{ts}-{name}.jpg）
-    const imgKey = `sites/${SITE_ID}/fields/${itemId}/file0-${ts}-photo.jpg`;
+    // 画像DL → S3アップロード
+    // why: CloudFront /media/* → S3 behavior にヒットさせるために media/ プレフィックスが必要。
+    const imgKey = `media/sites/${SITE_ID}/fields/${itemId}/file0-${ts}-photo.jpg`;
     const imgBuf = await downloadImage(d.seed, d.w, d.h);
     const imgUrl = await uploadS3(imgKey, imgBuf);
 
