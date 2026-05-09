@@ -30,8 +30,10 @@ const FILE_FIELD_MAX_CHARS = 2_048;
 const NUM_MIN = -999_999_999;
 const NUM_MAX = 999_999_999;
 
+// why: テンプレートでの参照名を明示することで、embed.js 利用者が
+//      Handlebars で {{fields.date0}} のように正確に記述できるようにする
 function fieldLabel(field: FieldDefinition): string {
-  return `${field.name || field.fieldId} (${field.fieldId})`;
+  return `${field.name || field.fieldId} (fields.${field.fieldId})`;
 }
 
 function isValidDateValue(value: string): boolean {

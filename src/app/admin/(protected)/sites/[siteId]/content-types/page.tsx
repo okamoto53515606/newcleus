@@ -98,6 +98,7 @@ export default async function ContentTypesPage({
                         {ct.description}
                       </p>
                     )}
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">CT_ID: {ct.ctId}</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{ct.fields.length}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">

@@ -162,6 +162,7 @@ export default async function SiteItemsPage({
                 <tr key={item.itemId} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">{item.itemId}</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{formatDateYmd(item.createdAt)}</td>
                   <td className="px-6 py-4 text-sm">

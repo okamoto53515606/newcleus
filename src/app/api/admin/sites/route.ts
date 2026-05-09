@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic';
 export interface SiteRecord {
   siteId: string;
   name: string;
-  shortname: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,7 +63,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/sites
  * 新規サイトを作成する。admin のみ可能。
  *
- * Body: { name, shortname }
+ * Body: { name }
  */
 export async function POST(req: NextRequest) {
   const user = await getAdminUser();
@@ -76,15 +75,11 @@ export async function POST(req: NextRequest) {
   if (!body || !body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
     return NextResponse.json({ error: 'name は必須です' }, { status: 400 });
   }
-  if (!body.shortname || typeof body.shortname !== 'string' || !/^[a-z0-9-]+$/.test(body.shortname.trim())) {
-    return NextResponse.json({ error: 'shortname は英小文字・数字・ハイフンのみ使用できます' }, { status: 400 });
-  }
 
   const now = new Date().toISOString();
   const site: SiteRecord = {
     siteId: randomBytes(10).toString('hex'),
     name: body.name.trim().slice(0, 100),
-    shortname: body.shortname.trim().slice(0, 50),
     createdAt: now,
     updatedAt: now,
   };

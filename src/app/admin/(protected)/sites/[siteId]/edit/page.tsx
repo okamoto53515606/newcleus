@@ -8,7 +8,6 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
   const router = useRouter();
   const [siteId, setSiteId] = useState('');
   const [name, setName] = useState('');
-  const [shortname, setShortname] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
@@ -22,7 +21,6 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
         .then((data: { site?: SiteRecord; error?: string }) => {
           if (data.site) {
             setName(data.site.name);
-            setShortname(data.site.shortname ?? '');
           }
           setFetching(false);
         })
@@ -44,7 +42,7 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
       const res = await fetch(`/api/admin/sites/${siteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, shortname }),
+        body: JSON.stringify({ name }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -103,23 +101,6 @@ export default function EditSitePage({ params }: { params: Promise<{ siteId: str
             onChange={(e) => setName(e.target.value)}
             className="admin-input w-full"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            短縮名（shortname）<span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={50}
-            value={shortname}
-            onChange={(e) => setShortname(e.target.value.toLowerCase())}
-            className="admin-input w-full font-mono"
-            pattern="[a-z0-9\-]+"
-            title="英小文字・数字・ハイフンのみ使用できます"
-          />
-          <p className="text-xs text-gray-400 mt-1">英小文字・数字・ハイフンのみ。変更すると公開 API の URL が変わります。</p>
         </div>
 
         {error && (

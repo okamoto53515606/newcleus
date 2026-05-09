@@ -65,7 +65,7 @@ export default async function SitesPage() {
                   サイト名
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  shortname
+                  SITE_ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   作成日
@@ -79,7 +79,7 @@ export default async function SitesPage() {
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium text-gray-900">{site.name}</p>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 font-mono">{site.shortname}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500 font-mono">{site.siteId}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(site.createdAt).toLocaleDateString('ja-JP')}
                   </td>
