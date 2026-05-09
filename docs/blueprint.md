@@ -74,35 +74,33 @@
 
 ---
 
-## 3. homepage-v2から流用する資産
+## 3. homepage-v2との違い
 
-### 削除するもの (homepage-v2にあってCMSに不要)
+newcleus は MVP として決済・AI生成・外部認証などを省き、できる限りシンプルにしています。
+homepage-v2 のベースがあるため開発コストを抑え、使用 AI モデルも低コストなものを選択しています。
 
-- インストーラーは不要（Powershellからwsl --import → setup/start.sh でセットアップ画面を手動起動してもらう）
-- CORSは全て許可
-- CSPは無し
-- テストコード（githubアクション連動）やDAST（定期的なZAP）は不要
-- 独自ドメインは不要（xxx.cloudfront.netを使う）
-- WAF（WAFは不要）
-- Cogniteの2FAは不要
-- CDNのキャッシュはしない（/media/配下のみ1時間キャッシュ）
-- Stripe決済関連 / Googleログイン関連
-- AI記事生成（Genkit関連)
-- Markdown関連 (`react-markdown`, `remark-gfm`)
-- setup1cとsetup2系とsetup3系とopsメニューは不要
-- 以下の環境変数を削除（環境変数利用コードも修正）
-  - GEMINI_API_KEY
-  - NEXT_PUBLIC_GOOGLE_CLIENT_ID
-  - GOOGLE_CLIENT_SECRET
-  - STRIPE_SECRET_KEY
-  - STRIPE_WEBHOOK_SECRET
-  - STRIPE_TAX_RATES
-  - CSP_REPORT_ONLY
-  - SESSION_DURATION_HOURS
-  - STRIPE_WEBHOOK_PROXY_URL
-  - CLOUDFRONT_DEFAULT_DOMAIN
-  - CLOUDFRONT_DISTRIBUTION_ID
-- Claude Opus 4.7 は不要。Claude Sonnet 4.6 で開発
+| 項目 | homepage-v2 | newcleus |
+|------|-------------|----------|
+| インストーラー | あり | なし（PowerShell から `wsl --import` → `setup/start.sh` で手動起動） |
+| CORS | サイトごとに制御 | 全て許可 |
+| CSP | あり | なし |
+| テスト・DAST | GitHub Actions + 定期 ZAP | なし |
+| 独自ドメイン | あり | なし（`xxx.cloudfront.net` を使用） |
+| WAF | あり | なし |
+| Cognito 2FA | あり | なし |
+| CDN キャッシュ | あり | `/media/` 配下のみ 1 時間、それ以外なし |
+| 決済 | Stripe 連携あり | なし |
+| Google ログイン | あり | なし |
+| AI 記事生成 | Genkit 連携あり | なし |
+| Markdown | `react-markdown` / `remark-gfm` あり | なし |
+| セットアップメニュー | setup1c・setup2系・setup3系・ops あり | なし |
+| 開発 AI モデル | Claude Opus 4.7 | Claude Sonnet 4.6 |
+
+### 参考資料
+
+- homepage-v2 の GitHub: https://github.com/okamoto53515606/homepage
+- v1→v2 切替の経緯と方針: https://github.com/okamoto53515606/homepage/blob/main/docs/blueprint_v2.md
+
 ---
 
 ## 4. Nucleusから引き継ぐ設計思想
@@ -394,11 +392,3 @@ GET /api/v1/sites/{siteId}/items
   &sort_by={key}             ⇐ ソートキー指定（num0 / date0 / createdAt のいずれか）
 ```
 
----
-
-## 10. 参照資料 `.sample-files`配下
-
-- 旧NucleusDB: testcms1のmysqldump
-- homepage-v2資産: `homepage/` 配下
-- homepage-v2 blueprint: `homepage/docs/blueprint_v2.md`
-- homepage-v2 DB設計: `homepage/docs/database-schema.md`
