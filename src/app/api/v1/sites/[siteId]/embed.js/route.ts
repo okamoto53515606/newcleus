@@ -130,16 +130,15 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
 
   var contentType = attr('content-type', '');
   var template    = attr('template', '');
-  // コンテンツ挿入先要素の ID を保持しておく（取得は fetch 完了後に行う）
-  // why: script タグが div より先に HTML に記述された場合、
-  //      スクリプト実行時点では div がまだ DOM に存在しないため、
-  //      getElementById を同期実行すると null になる。
-  //      fetch の非同期コールバック内で取得することで確実に見つかる。
   var targetId    = attr('target', 'cms-content');
   var limit       = attr('limit', '5');
   var page        = attr('page', '1');
   var sort        = attr('sort', 'desc');
   var sortBy      = attr('sort-by', 'createdAt');
+  // why: list-modal テンプレートでアイテムをクリックしたとき、
+  //      embed.js が /render?itemId=xxx で詳細を取得してモーダルに表示する。
+  //      使用するテンプレート shortname を data-modal-template で指定できる（省略時: "detail"）。
+  var modalTemplate = attr('modal-template', 'detail');
 
   // 必須パラメータチェック
   if (!contentType) {
@@ -178,6 +177,109 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
 
   var renderUrl = scriptOrigin + '/api/v1/sites/' + SITE_ID + '/render?' + params.toString();
 
+  // ─── インラインスクリプト再実行 ──────────────────────────────────────────────
+  // why: innerHTML で挿入された <script> タグはブラウザが実行しない仕様。
+  //      テンプレート内の script を動かすために createElement で再生成・置換する。
+  function execScripts(container) {
+    var scripts = container.querySelectorAll('script');
+    for (var k = 0; k < scripts.length; k++) {
+      var orig = scripts[k];
+      var copy = document.createElement('script');
+      if (orig.src) { copy.src = orig.src; copy.async = false; }
+      else { copy.textContent = orig.textContent; }
+      orig.parentNode.replaceChild(copy, orig);
+    }
+  }
+
+  // ─── モーダル・ページネーション ハンドラ ─────────────────────────────────────
+  // why: innerHTML 注入後に DOM が変わるため、毎回この関数でバインドし直す。
+  //      ページネーション時もコンテナを差し替えて再バインドするため再利用可能な関数にする。
+  function bindHandlers(container) {
+
+    // [data-cms-modal] クリック → /render?itemId=xxx でモーダル詳細を取得して表示
+    // why: テンプレートに <script> を書かなくてもモーダルが動くよう embed.js に組み込む。
+    //      .nc-modal-overlay / .nc-modal-body / .nc-modal-close はスターターテンプレートの慣習。
+    var overlay   = container.querySelector('.nc-modal-overlay');
+    var modalBody = overlay ? overlay.querySelector('.nc-modal-body') : null;
+    var closeBtn  = overlay ? overlay.querySelector('.nc-modal-close') : null;
+
+    if (overlay && modalBody) {
+      var triggers = container.querySelectorAll('[data-cms-modal]');
+      for (var m = 0; m < triggers.length; m++) {
+        (function (trigger) {
+          trigger.addEventListener('click', function () {
+            var itemId = trigger.getAttribute('data-cms-modal');
+            if (!itemId) return;
+
+            // ローディング表示 → モーダルを開く
+            modalBody.innerHTML = '<p style="text-align:center;padding:2em;color:#888">読み込み中…</p>';
+            overlay.classList.add('is-open');
+
+            var detailUrl = scriptOrigin
+              + '/api/v1/sites/' + SITE_ID + '/render'
+              + '?contentType=' + encodeURIComponent(contentType)
+              + '&template='    + encodeURIComponent(modalTemplate)
+              + '&itemId='      + encodeURIComponent(itemId);
+
+            fetch(detailUrl)
+              .then(function (res) {
+                return res.ok ? res.text() : '<p style="color:red;padding:1em">読み込みに失敗しました</p>';
+              })
+              .then(function (html) {
+                modalBody.innerHTML = html;
+                execScripts(modalBody);
+              })
+              .catch(function (err) {
+                console.error('[newcleus] modal fetch error:', err && err.message ? err.message : err);
+                modalBody.innerHTML = '<p style="color:red;padding:1em">読み込みに失敗しました</p>';
+              });
+          });
+        })(triggers[m]);
+      }
+
+      // 閉じるボタン
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          overlay.classList.remove('is-open');
+          modalBody.innerHTML = '';
+        });
+      }
+      // オーバーレイ背景クリックで閉じる
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          overlay.classList.remove('is-open');
+          modalBody.innerHTML = '';
+        }
+      });
+    }
+
+    // [data-cms-paginate] クリック → tools.nextHref/prevHref を fetch してコンテナ差し替え
+    // why: tools.nextHref は /render の絶対URL。ブラウザにナビゲートさせず
+    //      fetch で取得することで SPA のようにコンテンツだけ切り替える。
+    var pagers = container.querySelectorAll('[data-cms-paginate]');
+    for (var p = 0; p < pagers.length; p++) {
+      (function (link) {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          var href = link.getAttribute('href');
+          if (!href) return;
+
+          fetch(href)
+            .then(function (res) { return res.ok ? res.text() : ''; })
+            .then(function (html) {
+              if (!html || !html.trim()) return;
+              container.innerHTML = html;
+              execScripts(container);
+              bindHandlers(container);
+            })
+            .catch(function (err) {
+              console.error('[newcleus] paginate fetch error:', err && err.message ? err.message : err);
+            });
+        });
+      })(pagers[p]);
+    }
+  }
+
   fetch(renderUrl)
     .then(function (res) {
       if (!res.ok) {
@@ -201,23 +303,8 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
       }
 
       targetEl.innerHTML = html;
-
-      // why: innerHTML でセットされた <script> タグはブラウザが実行しない仕様のため、
-      //      手動で同等の script 要素を生成・挿入することで JS を実行させる。
-      //      テンプレート内のモーダル開閉 JS 等を動作させるために必要。
-      var scripts = targetEl.querySelectorAll('script');
-      for (var k = 0; k < scripts.length; k++) {
-        var orig = scripts[k];
-        var copy = document.createElement('script');
-        if (orig.src) {
-          copy.src = orig.src;
-          copy.async = false;
-        } else {
-          copy.textContent = orig.textContent;
-        }
-        // 元の script 要素を置き換えて実行させる
-        orig.parentNode.replaceChild(copy, orig);
-      }
+      execScripts(targetEl);
+      bindHandlers(targetEl);
     })
     .catch(function (err) {
       console.error('[newcleus] embed.js: fetch エラー:', err && err.message ? err.message : err);

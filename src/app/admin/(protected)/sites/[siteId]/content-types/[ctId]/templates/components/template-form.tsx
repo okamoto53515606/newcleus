@@ -8,7 +8,7 @@
  *      インラインリファレンスとして表示することで、テンプレート記述をサポートする。
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchWithSigning } from '@/lib/fetch';
 import type { TemplateRecord } from '@/app/api/admin/sites/[siteId]/content-types/[ctId]/templates/route';
@@ -42,6 +42,83 @@ const FIELD_TYPE_DESC: Record<FieldDefinition['type'], string> = {
   date: 'YYYY-MM-DD',
   num: '数値',
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// embed タグ例ブロック
+// why: テンプレートを作成・編集する画面で埋め込みコードをすぐ確認・コピーできるようにする。
+//      detail テンプレートはモーダル経由で呼ばれるため data-item-id 版も合わせて表示する。
+// ─────────────────────────────────────────────────────────────────────────────
+function EmbedTagBlock({
+  origin, siteId, ctId, shortname,
+}: { origin: string; siteId: string; ctId: string; shortname: string }) {
+  const [copied, setCopied] = useState(false);
+  const isDetail = shortname.includes('detail');
+
+  const listTag = `<div id="cms-content"></div>
+<script
+  src="${origin}/api/v1/sites/${siteId}/embed.js"
+  data-content-type="${ctId}"
+  data-template="${shortname}"
+  data-target="cms-content"
+  data-limit="10"
+  data-modal-template="detail"
+></script>`;
+
+  const detailTag = `<div id="cms-content"></div>
+<script
+  src="${origin}/api/v1/sites/${siteId}/embed.js"
+  data-content-type="${ctId}"
+  data-template="${shortname}"
+  data-target="cms-content"
+  data-item-id="[記事IDをここに入力]"
+></script>`;
+
+  const tag = isDetail ? detailTag : listTag;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(tag);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = tag;
+      el.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium text-blue-800">
+          embed タグ{isDetail ? '（単一記事表示）' : '（一覧表示）'}
+        </p>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={`admin-btn text-xs ${copied ? 'text-green-700' : ''}`}
+        >
+          {copied ? 'コピー済み ✓' : 'コピー'}
+        </button>
+      </div>
+      <pre className="text-xs font-mono bg-white border border-blue-100 rounded p-3 overflow-x-auto whitespace-pre">{tag}</pre>
+      {!isDetail && (
+        <p className="text-xs text-blue-700 mt-2">
+          ※ モーダル表示には <code>data-modal-template="detail"</code> で指定した detail テンプレートが使われます。
+        </p>
+      )}
+      {isDetail && (
+        <p className="text-xs text-blue-700 mt-2">
+          ※ <code>[記事IDをここに入力]</code> を実際の記事ID（itemId）に差し替えてください。
+        </p>
+      )}
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // スターターテンプレート
@@ -115,32 +192,23 @@ function buildStarters(ctId: string) {
 </div>`,
     },
     {
-      key: 'detail-full',
-      label: '記事詳細（フルHTMLページ）',
+      key: 'detail',
+      label: '記事詳細（パーツ・埋め込み用）',
       name: '記事詳細',
       shortname: 'detail',
-      body: `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{item.title}}</title>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 24px; }
-    .nc-date { color: #888; font-size: .875rem; }
-    .nc-body img { max-width: 100%; height: auto; }
-  </style>
-</head>
-<body>
-  {{#with item}}
-  <article>
-    <p class="nc-date">{{formatDate createdAt "YYYY/MM/DD"}}</p>
-    <h1>{{title}}</h1>
-    <div class="nc-body">{{{body}}}</div>
-  </article>
-  {{/with}}
-</body>
-</html>`,
+      // why: パーツとして埋め込む場合はフル HTML 構造不要。
+      //      embed.js のモーダル内に注入するケースもあるため
+      //      <html>/<head>/<body> は持たずフラグメントのみで記述する。
+      body: `<style>
+.nc-detail-body img { max-width: 100%; height: auto; }
+</style>
+{{#with item}}
+<article>
+  <p style="color:#888;font-size:.875rem">{{formatDate createdAt "YYYY年MM月DD日"}}</p>
+  <h2>{{title}}</h2>
+  <div class="nc-detail-body">{{{body}}}</div>
+</article>
+{{/with}}`,
     },
   ];
 }
@@ -160,6 +228,13 @@ export default function TemplateForm({ siteId, ctId, initial, fields }: Template
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
   const starters = buildStarters(ctId);
+
+  // why: window.location.origin はクライアント側でのみ利用可能。
+  //      SSR 時は空文字で初期化し、マウント後に正確なオリジンをセットする。
+  //      管理画面と公開 API は同じ CloudFront ドメインのため、
+  //      window.location.origin がそのまま embed.js の配信元 URL になる。
+  const [pageOrigin, setPageOrigin] = useState('');
+  useEffect(() => { setPageOrigin(window.location.origin); }, []);
 
   function applyStarter(key: string) {
     const s = starters.find((x) => x.key === key);
@@ -316,6 +391,16 @@ export default function TemplateForm({ siteId, ctId, initial, fields }: Template
           英小文字・数字・ハイフン。embed.js からの呼び出し識別子になります。
         </p>
       </div>
+
+      {/* embed タグ例 */}
+      {shortname && pageOrigin && (
+        <EmbedTagBlock
+          origin={pageOrigin}
+          siteId={siteId}
+          ctId={ctId}
+          shortname={shortname}
+        />
+      )}
 
 
       {/* 利用可能な変数リファレンス */}

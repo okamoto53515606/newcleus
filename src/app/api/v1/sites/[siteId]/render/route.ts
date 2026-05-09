@@ -35,6 +35,7 @@ import {
   sortItems,
   buildTools,
   registerHandlebarsHelpers,
+  fetchPublishedItemById,
   type PublicItemsQuery,
 } from '@/lib/public-api';
 import { getPublicOrigin } from '@/lib/origin';
@@ -103,7 +104,69 @@ export async function GET(
     );
   }
 
-  // ─── オプションパラメータ（/items と同じ検証ロジック） ─────────────────────
+  // ─── itemId 値定時: 単一記事レンダリング（早期リターン）─────────────────────────
+  // why: itemId が指定された場合はページネーション・フィルタ・ソートが不要なため、
+  //      引数解析をスキップして直接レンダリングに入る。
+  //      embed.js のモーダル表示（一覧から記事詳細を開く）で使用する。
+  const rawItemId = sp.get('itemId')?.trim() ?? '';
+  if (rawItemId) {
+    if (!isSafeId(rawItemId)) {
+      return NextResponse.json(
+        { error: 'itemId の値が不正です' },
+        { status: 400, headers: CORS_HEADERS },
+      );
+    }
+
+    const [site, ct] = await Promise.all([
+      fetchSite(siteId),
+      fetchContentType(siteId, contentType),
+    ]);
+    if (!site || !ct) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORS_HEADERS });
+    }
+
+    const template = await fetchTemplateByShortname(ct.ctId, templateShortname);
+    if (!template) {
+      const available = await fetchTemplateShortnames(ct.ctId);
+      return NextResponse.json(
+        { error: `テンプレート "${templateShortname}" が見つかりません`, availableTemplates: available },
+        { status: 404, headers: CORS_HEADERS },
+      );
+    }
+
+    const item = await fetchPublishedItemById(siteId, rawItemId, ct.ctId);
+    // why: 存在しない/非公開を区別しない。公開記事以外は空 HTML を返す。
+    if (!item) {
+      return new NextResponse('', { status: 200, headers: htmlHeaders() });
+    }
+
+    registerHandlebarsHelpers();
+    const renderItem = {
+      id: item.itemId,
+      itemId: item.itemId,
+      title: item.title,
+      body: item.body,
+      contentType: { id: ct.ctId, name: ct.name },
+      fields: (item.fields ?? {}) as Record<string, unknown>,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    };
+    // 単一記事はページネーションなし
+    const singleTools = {
+      total: 1, currentPage: 1, totalPages: 1,
+      hasNext: false, hasPrev: false,
+      nextPage: 1, prevPage: 1, nextHref: null, prevHref: null,
+    };
+    let singleHtml: string;
+    try {
+      const compiled = Handlebars.compile(template.body, { noEscape: false });
+      singleHtml = compiled({ items: [renderItem], item: renderItem, tools: singleTools });
+    } catch (err) {
+      console.error('[newcleus/render] template compile error (single item):', err);
+      return new NextResponse('', { status: 200, headers: htmlHeaders() });
+    }
+    return new NextResponse(singleHtml, { status: 200, headers: htmlHeaders() });
+  }
   const limit = parseLimit(sp.get('limit'), 10, 100);
   const page = parsePage(sp.get('page'));
 

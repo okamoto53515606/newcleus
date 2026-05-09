@@ -11,7 +11,6 @@ import Link from 'next/link';
 import type { SiteRecord } from '@/app/api/admin/sites/route';
 import type { ContentTypeRecord } from '@/app/api/admin/sites/[siteId]/content-types/route';
 import type { TemplateRecord } from '@/app/api/admin/sites/[siteId]/content-types/[ctId]/templates/route';
-import EmbedCopyButton from './components/embed-copy-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +22,6 @@ export default async function TemplatesPage({
   const { siteId, ctId } = await params;
   const user = await getAdminUser();
   if (!user) return null;
-
-  // why: embed.js URL のオリジンはサーバーサイドで確定させる。
-  //      isDevelopment() では CLOUDFRONT_DOMAIN を使わないため localhost にフォールバック。
-  const cfDomain = process.env.CLOUDFRONT_DOMAIN;
-  const isProduction = process.env.NODE_ENV === 'production';
-  const publicOrigin =
-    isProduction && cfDomain ? `https://${cfDomain}` : 'http://localhost:9002';
 
   const db = getDocClient();
 
@@ -125,20 +117,12 @@ export default async function TemplatesPage({
                     {new Date(tmpl.updatedAt).toLocaleDateString('ja-JP')}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <EmbedCopyButton
-                        siteId={siteId}
-                        ctId={ctId}
-                        shortname={tmpl.shortname}
-                        origin={publicOrigin}
-                      />
-                      <Link
-                        href={`/admin/sites/${siteId}/content-types/${ctId}/templates/${tmpl.templateId}/edit`}
-                        className="admin-btn text-xs"
-                      >
-                        編集
-                      </Link>
-                    </div>
+                    <Link
+                      href={`/admin/sites/${siteId}/content-types/${ctId}/templates/${tmpl.templateId}/edit`}
+                      className="admin-btn text-xs"
+                    >
+                      編集
+                    </Link>
                   </td>
                 </tr>
               ))}

@@ -293,6 +293,29 @@ export function buildTools(
   };
 }
 
+/**
+ * 公開済みの単一アイテムを取得する
+ *
+ * why: /render の itemId パラメータや embed.js のモーダル表示用に
+ *      siteId + itemId で直接 GetItem する。
+ *      contentTypeId の一致確認で、他サイト・他コンテンツタイプの記事が
+ *      返ることを防ぐ（セキュリティ + 不整合防止）。
+ */
+export async function fetchPublishedItemById(
+  siteId: string,
+  itemId: string,
+  contentTypeId: string,
+): Promise<ItemRecord | null> {
+  const db = getDocClient();
+  const r = await db.send(
+    new GetCommand({ TableName: Tables.items, Key: { siteId, itemId } }),
+  );
+  if (!r.Item) return null;
+  const item = r.Item as ItemRecord;
+  if (item.status !== 'published' || item.contentTypeId !== contentTypeId) return null;
+  return item;
+}
+
 // ─── Handlebars ヘルパー ────────────────────────────────────────────────────────
 
 let helpersRegistered = false;
