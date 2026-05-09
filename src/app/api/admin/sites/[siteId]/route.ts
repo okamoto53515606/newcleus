@@ -44,12 +44,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ site
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ siteId: string }> }) {
   const user = await getAdminUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // why: サイトの名称・設定変更は管理者権限が必要。
+  //      siteadmin はコンテンツ編集のみ許可し、サイト設定変更は不可とする。
+  if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { siteId } = await params;
-  if (!canAccessSite(user, siteId)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
 
   const db = getDocClient();
   const existing = await db.send(new GetCommand({ TableName: Tables.sites, Key: { siteId } }));

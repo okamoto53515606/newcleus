@@ -5,6 +5,16 @@
  * 開閉可能なサイドナビゲーション。
  * 閉じた状態ではアイコンのみ表示し、開いた状態ではラベルも表示。
  * 開閉状態はlocalStorageに保存され、リロード後も維持されます。
+ *
+ * 【Props】
+ * - email: ログイン中ユーザーのメールアドレス（サーバー側で解決済み）
+ * - role: Cognito custom:role（'admin' | 'siteadmin'）
+ * - version: package.json のバージョン文字列
+ *
+ * 【表示制御】
+ * - テナント管理リンク: role === 'admin' のみ表示
+ * - ユーザー情報＋ログアウト: サイドバー最下部に常時表示
+ * - フッター: 'newcleus v{version}'
  */
 'use client';
 
@@ -17,6 +27,8 @@ import {
   Globe,
   ChevronLeft,
   ChevronRight,
+  Users,
+  LogOut,
 } from 'lucide-react';
 
 const STORAGE_KEY = 'admin-sidebar-collapsed';
@@ -26,7 +38,13 @@ interface SiteSummary {
   name: string;
 }
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  email?: string;
+  role?: string;
+  version?: string;
+}
+
+export function AdminSidebar({ email, role, version }: AdminSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [sites, setSites] = useState<SiteSummary[]>([]);
@@ -79,6 +97,7 @@ export function AdminSidebar() {
     pathname === '/admin/sites/new' ||
     /^\/admin\/sites\/[^/]+\/edit$/.test(pathname) ||
     /^\/admin\/sites\/[^/]+\/content-types(?:\/.*)?$/.test(pathname);
+  const isTenantsActive = pathname.startsWith('/admin/tenants');
 
   const effectiveActiveSiteId =
     activeSiteIdFromQuery ||
@@ -89,8 +108,8 @@ export function AdminSidebar() {
 
   return (
     <aside className={`admin-sidebar ${collapsed ? 'admin-sidebar--collapsed' : ''}`}>
+      {/* ヘッダー（開閉トグルのみ。タイトルは削除） */}
       <div className="admin-sidebar__header">
-        {!collapsed && <h2>newcleus</h2>}
         <button
           onClick={toggleCollapsed}
           className="admin-sidebar__toggle"
@@ -139,11 +158,24 @@ export function AdminSidebar() {
           </>
         )}
 
-        <ul>
+        <ul className="mt-auto">
+          {/* テナント管理（admin のみ表示） */}
+          {role === 'admin' && (
+            <li>
+              <Link
+                href="/admin/tenants"
+                className={`admin-nav__link ${isTenantsActive ? 'admin-nav__link--active' : ''}`}
+                title={collapsed ? 'テナント管理' : undefined}
+              >
+                <Users size={20} />
+                {!collapsed && <span>テナント管理</span>}
+              </Link>
+            </li>
+          )}
           <li>
             <Link
               href="/admin/sites"
-              className={`admin-nav__link admin-nav__link--back ${isSettingsActive ? 'admin-nav__link--active' : ''}`}
+              className={`admin-nav__link ${isSettingsActive ? 'admin-nav__link--active' : ''}`}
               title={collapsed ? '設定' : undefined}
             >
               <Settings size={20} />
@@ -152,6 +184,30 @@ export function AdminSidebar() {
           </li>
         </ul>
       </nav>
+
+      {/* ユーザー情報 & ログアウト */}
+      <div className="admin-sidebar__user-area">
+        {!collapsed && email && (
+          <p className="admin-sidebar__email" title={email}>{email}</p>
+        )}
+        <form action="/api/admin/auth/logout" method="POST">
+          <button
+            type="submit"
+            className="admin-sidebar__logout"
+            title="ログアウト"
+          >
+            <LogOut size={16} />
+            {!collapsed && <span>ログアウト</span>}
+          </button>
+        </form>
+      </div>
+
+      {/* フッター */}
+      {!collapsed && (
+        <div className="admin-sidebar__footer">
+          newcleus {version ? `v${version}` : ''}
+        </div>
+      )}
     </aside>
   );
 }

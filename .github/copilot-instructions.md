@@ -4,14 +4,16 @@
 - DB設計書: docs/database-schema.md
 - AWS最新情報: MCP（aws-knowledge-mcp-server / brave-search）
 
-## 進捗状況（2026-05-08 時点）
+## 進捗状況（2026-05-09 時点）
 
 ### 完了済み（blueprint.md § 7 フェーズ対応）
 
 | フェーズ | 内容 | 状態 |
 |---------|------|------|
 | Phase 1 | プロジェクト雛形・不要物削除・DynamoDB設計 | ✅ 完了 |
-| Phase 2 | setupアプリ + 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | ✅ コード実装済み（Dockerfile修正後の再デプロイが必要）|
+| Phase 2 | setupアプリ + 管理画面: サイト管理CRUD + コンテンツタイプ管理CRUD | ✅ 完了 |
+| Phase 3 | 記事CRUD + TinyMCE 7 エディタ + 画像アップロード(S3) + 汎用フィールド + テンプレート管理 | ✅ 実装済み |
+| Phase 6 | テナント管理: siteadmin 管理（Cognito API） | ✅ 完了 |
 
 #### setup 画面の完了状況
 - `setup0`: AWS root キー検証 ✅
@@ -23,9 +25,10 @@
 #### 実装済みの主要ファイル
 - `cdk/` — CognitoStack + InfraStack（WafStack・独自ドメイン除去済み）
 - `setup/` — セットアップ用 Next.js アプリ（ポート 3001）
-- `src/app/admin/` — 管理画面（サイト管理・コンテンツタイプ管理 CRUD）
-- `src/app/api/admin/` — 管理 API Route Handler 群
+- `src/app/admin/` — 管理画面（サイト管理・コンテンツタイプ管理・記事管理・テンプレート管理・テナント管理 CRUD）
+- `src/app/api/admin/` — 管理 API Route Handler 群（sites / content-types / items / templates / tenants / preview）
 - `src/lib/` — admin-auth / dynamodb / env 等ユーティリティ
+- `src/components/admin/admin-sidebar.tsx` — サイドバー（ロール別メニュー・ユーザー情報・ログアウト・フッター）
 - `Dockerfile` — Lambda Web Adapter + node:20-alpine 構成（ENTRYPOINTなし、/opt/extensions/ 配置方式）
 
 ### 未実装（次セッション以降の作業）
@@ -34,8 +37,7 @@
 |---------|------|
 | Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
 | Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
-| Phase 6 | テナント管理: siteadmin 管理（Cognito API）|
-| Phase 7 | 活用パターン別サンプルデータ（コンテンツタイプ、ダミー記事、テンプレート）を作成したい |
+| Phase 7 | 活用パターン別サンプルデータ（コンテンツタイプ、ダミー記事、テンプレート）|
 
 ## 記述方針（必須）
 

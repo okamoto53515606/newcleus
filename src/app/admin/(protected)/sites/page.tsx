@@ -91,12 +91,14 @@ export default async function SitesPage() {
                       >
                         コンテンツタイプ設定
                       </Link>
-                      <Link
-                        href={`/admin/sites/${site.siteId}/edit`}
-                        className="admin-btn text-xs"
-                      >
-                        編集
-                      </Link>
+                      {user.role === 'admin' && (
+                        <Link
+                          href={`/admin/sites/${site.siteId}/edit`}
+                          className="admin-btn text-xs"
+                        >
+                          編集
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>

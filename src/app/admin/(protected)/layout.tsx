@@ -10,6 +10,10 @@ import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/lib/admin-auth';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 
+// package.json からバージョンを取得（サーバーサイドでのみ実行される）
+// why: Client Component へ渡す最小データに留めるためサーバー側で解決する
+import { version as APP_VERSION } from '../../../../package.json';
+
 export default async function AdminProtectedLayout({
   children,
 }: Readonly<{
@@ -22,7 +26,11 @@ export default async function AdminProtectedLayout({
 
   return (
     <div className="admin-layout">
-      <AdminSidebar />
+      <AdminSidebar
+        email={adminUser.email}
+        role={adminUser.role}
+        version={APP_VERSION}
+      />
       <main className="admin-main">
         {children}
       </main>
