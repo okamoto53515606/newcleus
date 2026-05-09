@@ -55,9 +55,6 @@ export default async function NewTemplatePage({
         </nav>
         <h1 className="text-2xl font-bold text-gray-900">テンプレート新規作成</h1>
       </div>
-        </nav>
-        <h1 className="text-2xl font-bold text-gray-900">テンプレート追加</h1>
-      </div>
 
       <div className="admin-card">
         <TemplateForm siteId={siteId} ctId={ctId} fields={ct.fields} />
