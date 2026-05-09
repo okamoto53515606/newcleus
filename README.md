@@ -6,3 +6,4 @@
 
 - [セットアップ手順書](docs/setup1.md)
 - [blueprint](docs/blueprint.md)
+- [紹介記事](https://www.okamomedia.tokyo/articles/release-newcleus-multitenant-cms)
