@@ -36,16 +36,18 @@ export default async function TenantsPage() {
   const region = userPoolId.split('_')[0];
   const cognitoClient = new CognitoIdentityProviderClient({ region });
 
-  // siteadmin ユーザー一覧を取得
+  // why: Cognito ListUsers は custom:* 属性の Filter に対応していないため、
+  //      全ユーザー取得後にアプリ側で role=siteadmin のみ絞り込む。
   const usersResp = await cognitoClient.send(
     new ListUsersCommand({
       UserPoolId: userPoolId,
-      Filter: 'custom:role = "siteadmin"',
       Limit: 60,
     }),
   );
 
-  const tenants: TenantUser[] = (usersResp.Users ?? []).map((u) => {
+  const tenants: TenantUser[] = (usersResp.Users ?? [])
+    .filter((u) => (u.Attributes ?? []).find((a) => a.Name === 'custom:role')?.Value === 'siteadmin')
+    .map((u) => {
     const attrs = Object.fromEntries(
       (u.Attributes ?? []).map((a) => [a.Name, a.Value]),
     );

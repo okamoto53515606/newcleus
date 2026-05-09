@@ -13,7 +13,6 @@ export interface SiteRecord {
   siteId: string;
   name: string;
   shortname: string;
-  adminUsers: Array<{ userId?: string; email: string; status: 'pending' | 'active' }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -86,7 +85,6 @@ export async function POST(req: NextRequest) {
     siteId: randomBytes(10).toString('hex'),
     name: body.name.trim().slice(0, 100),
     shortname: body.shortname.trim().slice(0, 50),
-    adminUsers: [],
     createdAt: now,
     updatedAt: now,
   };

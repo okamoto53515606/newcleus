@@ -41,17 +41,22 @@ export async function GET(_req: NextRequest) {
 
   const { client, userPoolId } = getCognitoClient();
 
-  // custom:role = "siteadmin" のユーザーのみ取得
-  // why: Cognito ListUsers の Filter は属性値でのフィルタリングをサポートする
+  // why: Cognito ListUsers の Filter は custom:* 属性に対応していないため、
+  //      全ユーザーを取得してアプリ側で role=siteadmin のみに絞り込む。
+  //      Limit=60 は admin ユーザーを含む総数を想定した上限。
   const resp = await client.send(
     new ListUsersCommand({
       UserPoolId: userPoolId,
-      Filter: 'custom:role = "siteadmin"',
       Limit: 60,
     }),
   );
 
-  const users = (resp.Users ?? []).map((u) => {
+  const users = (resp.Users ?? [])
+    .filter((u) => {
+      const role = (u.Attributes ?? []).find((a) => a.Name === 'custom:role')?.Value;
+      return role === 'siteadmin';
+    })
+    .map((u) => {
     const attrs = Object.fromEntries(
       (u.Attributes ?? []).map((a) => [a.Name, a.Value]),
     );

@@ -37,7 +37,7 @@
 |---------|------|
 | Phase 4 | 公開API: `/api/v1/sites/{siteId}/items` JSON API + CORS |
 | Phase 5 | 公開API: `embed.js` (Handlebars SSR) |
-| Phase 7 | 活用パターン別サンプルデータ（コンテンツタイプ、ダミー記事、テンプレート）|
+| Phase 7 | サイト追加時にいくつかのコンテンツタイプ＋テンプレート（お知らせとフォトギャラリー）を初期セットしたい。|
 
 ## 記述方針（必須）
 

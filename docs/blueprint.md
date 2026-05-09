@@ -112,7 +112,7 @@
 | blog (テナント単位) | `sites/{siteId}` コレクション |
 | item (記事) | `sites/{siteId}/items/{itemId}` サブコレクション |
 | category | `sites/{siteId}/contentTypes/{contentTypeId}` サブコレクション |
-| member + team (ユーザーとブログの紐づけ) | Custom Claims (`siteIds[]`) + `sites/{siteId}.adminUsers[]` |
+| member + team (ユーザーとブログの紐づけ) | Cognito `custom:siteIds`（JSON文字列配列）で管理 |
 | MyShowBlogsの汎用フィールド (text0-9, file0-9, flag0-9, date0-9, num0-9) | `items/{itemId}.fields` マップ |
 | MyShowBlogsのフィールド定義 (plugin_option_desc) | `contentTypes/{contentTypeId}.fieldLabels` マップ |
 | MyShowBlogsのフィルタ (flag0=1等) | 公開APIのクエリパラメータ |
@@ -140,7 +140,7 @@
 - サイト作成時にDynamoDBに初期コンテンツタイプ自動生成
 - サイト一覧・編集・削除
 - siteadmin登録、削除（Cognito API）
-- サイト別のsiteadmin一覧表示（`sites/{siteId}.adminUsers` から取得）
+- siteadmin一覧表示（Cognito ListUsers から取得し、`custom:role=siteadmin` でフィルタ）
 
 ### 5.3 コンテンツタイプ管理 (admin / siteadmin)
 
