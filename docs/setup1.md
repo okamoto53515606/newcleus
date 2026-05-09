@@ -1,5 +1,4 @@
-# newcleus セットアップ手順書 
-— サイト公開まで
+# newcleus セットアップ手順書 — サイト公開まで
 
 > **このパートのゴール:** AWS アカウントを準備し、CloudFront ドメイン（`xxx.cloudfront.net`）でサイトと管理画面を公開する。
 
