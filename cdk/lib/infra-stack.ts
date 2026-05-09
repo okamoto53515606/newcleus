@@ -251,7 +251,52 @@ export class InfraStack extends cdk.Stack {
     });
 
     // =========================================================
-    // 10. CloudFront ディストリビューション
+    // 10b. メディア専用レスポンスヘッダポリシー
+    //
+    // why: /media/* の画像は外部サイトへの embed.js 埋め込みや
+    //      ローカル開発（localhost）からも fetch される。
+    //      アプリ本体と同じ securityHeadersPolicy（CORP: same-site）を
+    //      そのまま使うと、異なるオリジンからの画像読み込みが
+    //      Cross-Origin-Resource-Policy ヘッダでブロックされる。
+    //      メディアは公開アセットなので CORP: cross-origin が適切。
+    // =========================================================
+    const mediaSecurityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'MediaSecurityHeadersPolicy', {
+      responseHeadersPolicyName: 'newcleus-media-security-headers',
+      comment: 'CORP: cross-origin — 公開メディアを外部サイト・ローカルから読み込み可にする',
+      securityHeadersBehavior: {
+        strictTransportSecurity: {
+          accessControlMaxAge: cdk.Duration.days(365),
+          includeSubdomains: true,
+          preload: false,
+          override: true,
+        },
+        contentTypeOptions: { override: true },
+        referrerPolicy: {
+          referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          override: true,
+        },
+      },
+      customHeadersBehavior: {
+        customHeaders: [
+          // why: cross-origin にすることで外部オリジン（embed.js 埋め込み先、localhost 開発環境）
+          //      からの画像読み込みを許可する。same-site だとブロックされる。
+          { header: 'Cross-Origin-Resource-Policy', value: 'cross-origin', override: true },
+          { header: 'Server', value: 'CloudFront', override: true },
+        ],
+      },
+      corsBehavior: {
+        // why: TinyMCE 等のエディタが drawImage() で画像を扱う際に CORS が必要。
+        //      allow-all-origins にすることで外部埋め込みサイトからも Access-Control を通す。
+        accessControlAllowOrigins: ['*'],
+        accessControlAllowMethods: ['GET', 'HEAD'],
+        accessControlAllowHeaders: ['*'],
+        accessControlMaxAge: cdk.Duration.seconds(600),
+        originOverride: false,
+      },
+    });
+
+    // =========================================================
+    // 11. CloudFront ディストリビューション
     // =========================================================
 
     const lambdaOrigin = origins.FunctionUrlOrigin.withOriginAccessControl(appFunctionUrl);
@@ -270,12 +315,13 @@ export class InfraStack extends cdk.Stack {
       },
       additionalBehaviors: {
         // /media/*: S3 OAC、1 時間キャッシュ（blueprint §3 の唯一のキャッシュ例外）
+        // why: responseHeadersPolicy はメディア専用ポリシー（CORP: cross-origin）を使用。
         '/media/*': {
           origin: s3Origin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: mediaCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-          responseHeadersPolicy: securityHeadersPolicy,
+          responseHeadersPolicy: mediaSecurityHeadersPolicy,
         },
       },
       priceClass: cloudfront.PriceClass.PRICE_CLASS_200,
