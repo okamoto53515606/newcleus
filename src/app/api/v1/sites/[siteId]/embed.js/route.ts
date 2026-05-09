@@ -130,6 +130,11 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
 
   var contentType = attr('content-type', '');
   var template    = attr('template', '');
+  // コンテンツ挿入先要素の ID を保持しておく（取得は fetch 完了後に行う）
+  // why: script タグが div より先に HTML に記述された場合、
+  //      スクリプト実行時点では div がまだ DOM に存在しないため、
+  //      getElementById を同期実行すると null になる。
+  //      fetch の非同期コールバック内で取得することで確実に見つかる。
   var targetId    = attr('target', 'cms-content');
   var limit       = attr('limit', '5');
   var page        = attr('page', '1');
@@ -143,13 +148,6 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
   }
   if (!template) {
     console.error('[newcleus] embed.js: data-template が指定されていません');
-    return;
-  }
-
-  // コンテンツ挿入先要素を取得する
-  var targetEl = document.getElementById(targetId);
-  if (!targetEl) {
-    console.error('[newcleus] embed.js: 要素 #' + targetId + ' が見つかりません');
     return;
   }
 
@@ -191,7 +189,35 @@ function buildEmbedScript(siteId: string, serverOrigin: string): string {
     .then(function (html) {
       // 空文字列または空白のみの場合は何もしない（0 件の場合など）
       if (!html || !html.trim()) return;
+
+      // why: getElementById はここで呼ぶ。
+      //      同期実行時点では div がまだ DOM に存在しない場合があるため
+      //      （script タグより後に div を書いた場合など）、
+      //      非同期コールバック内で取得することで確実に見つかる。
+      var targetEl = document.getElementById(targetId);
+      if (!targetEl) {
+        console.error('[newcleus] embed.js: 要素 #' + targetId + ' が見つかりません');
+        return;
+      }
+
       targetEl.innerHTML = html;
+
+      // why: innerHTML でセットされた <script> タグはブラウザが実行しない仕様のため、
+      //      手動で同等の script 要素を生成・挿入することで JS を実行させる。
+      //      テンプレート内のモーダル開閉 JS 等を動作させるために必要。
+      var scripts = targetEl.querySelectorAll('script');
+      for (var k = 0; k < scripts.length; k++) {
+        var orig = scripts[k];
+        var copy = document.createElement('script');
+        if (orig.src) {
+          copy.src = orig.src;
+          copy.async = false;
+        } else {
+          copy.textContent = orig.textContent;
+        }
+        // 元の script 要素を置き換えて実行させる
+        orig.parentNode.replaceChild(copy, orig);
+      }
     })
     .catch(function (err) {
       console.error('[newcleus] embed.js: fetch エラー:', err && err.message ? err.message : err);
