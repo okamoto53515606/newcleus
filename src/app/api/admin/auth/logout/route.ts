@@ -1,7 +1,12 @@
 /**
  * 管理者ログアウト API
- * 
- * admin_session cookie を削除し、Cognito Hosted UI のログアウト URL にリダイレクト。
+ *
+ * admin_session cookie を削除し、Cognito Hosted UI のログアウト URL を JSON で返す。
+ *
+ * why: ネイティブ HTML フォームの POST は fetchWithSigning を経由しないため、
+ *      CloudFront OAC の SigV4 ボディハッシュ検証で署名不一致になる。
+ *      クライアントは fetchWithSigning で POST し、返却された logoutUrl に
+ *      window.location.href で遷移することで署名エラーを回避する。
  */
 
 import { cookies } from 'next/headers';
@@ -19,5 +24,8 @@ export async function POST(request: NextRequest) {
   const logoutRedirectUrl = `${getPublicOrigin(request)}/admin/login`;
   const cognitoLogoutUrl = getCognitoLogoutUrl(logoutRedirectUrl);
 
-  return NextResponse.redirect(cognitoLogoutUrl, { status: 303 });
+  // why: NextResponse.redirect ではなく JSON を返す。
+  //      クライアントが window.location.href で遷移することで
+  //      Cognito のセッションも正しくクリアされる。
+  return NextResponse.json({ logoutUrl: cognitoLogoutUrl });
 }

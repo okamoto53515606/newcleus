@@ -34,6 +34,7 @@ import {
   Users,
   LogOut,
 } from 'lucide-react';
+import { fetchWithSigning } from '@/lib/fetch';
 
 const STORAGE_KEY = 'admin-sidebar-collapsed';
 
@@ -79,6 +80,25 @@ export function AdminSidebar({ email, role, version }: AdminSidebarProps) {
   // 記事管理リンク: アクティブなサイトがあればそのサイトのダッシュボードへ
   const articlesHref = activeSiteId ? `/admin?siteId=${activeSiteId}` : '/admin';
 
+  // why: ネイティブ form POST ではなく fetchWithSigning を使う。
+  //      CloudFront OAC は POST ボディの SHA256 を SigV4 で検証するため、
+  //      ブラウザの form submit（x-amz-content-sha256 なし）では署名不一致になる。
+  //      fetchWithSigning でハッシュを付与し、サーバーから logoutUrl を受け取って遷移する。
+  const handleLogout = async () => {
+    try {
+      const res = await fetchWithSigning('/api/admin/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json() as { logoutUrl?: string };
+      window.location.href = data.logoutUrl ?? '/admin/login';
+    } catch {
+      window.location.href = '/admin/login';
+    }
+  };
+
+
   const collapsed = isHydrated ? isCollapsed : false;
 
   return (
@@ -100,16 +120,15 @@ export function AdminSidebar({ email, role, version }: AdminSidebarProps) {
         {!collapsed && email && (
           <p className="admin-sidebar__email" title={email}>{email}</p>
         )}
-        <form action="/api/admin/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="admin-sidebar__logout"
-            title="ログアウト"
-          >
-            <LogOut size={16} />
-            {!collapsed && <span>ログアウト</span>}
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => { void handleLogout(); }}
+          className="admin-sidebar__logout"
+          title="ログアウト"
+        >
+          <LogOut size={16} />
+          {!collapsed && <span>ログアウト</span>}
+        </button>
       </div>
 
       <nav className="admin-nav">

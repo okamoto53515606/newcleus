@@ -16,11 +16,17 @@ import type { TemplateRecord } from '@/app/api/admin/sites/[siteId]/content-type
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 // why: 公開 API は利用者の任意ドメインから呼ばれるため CORS を全許可する（blueprint §3）
+// Cross-Origin-Resource-Policy: cross-origin を明示する理由:
+//   CloudFront の securityHeadersPolicy は CORP: same-site を override: false で付与する。
+//   override: false は「オリジンがヘッダーを返していない場合のみ追加」という意味なので、
+//   Lambda 側でここに cross-origin をセットしておけば CloudFront は same-site を上書きしない。
+//   これにより GitHub Pages 等の外部ドメインからの <script> / fetch による読み込みが可能になる。
 export const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Cache-Control': 'no-store',
+  'Cross-Origin-Resource-Policy': 'cross-origin',
 };
 
 // ─── バリデーション ────────────────────────────────────────────────────────────
