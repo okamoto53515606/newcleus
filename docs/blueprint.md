@@ -1,4 +1,4 @@
-# newcleus — Blueprint v0.0.4
+# newcleus — Blueprint
 
 > 名前の由来: "new" + "Nucleus CMS"。 20年前のNucleus CMSの設計思想をリスペクトしつつ、モダン技術で再実装するプロジェクト。
 
@@ -76,7 +76,7 @@
 
 ## 3. homepage-v2との違い
 
-newcleus は MVP として決済・AI生成・外部認証などを省き、できる限りシンプルにしています。
+newcleus は MVP（Minimum Viable Product）として決済・AI生成・外部認証などを省き、できる限りシンプルにしています。
 homepage-v2 のベースがあるため開発コストを抑え、使用 AI モデルも低コストなものを選択しています。
 
 | 項目 | homepage-v2 | newcleus |

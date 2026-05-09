@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed-test-data.ts",
     "seed:dry": "tsx scripts/seed-test-data.ts --dry-run",
-    "seed:delete": "tsx scripts/seed-test-data.ts --delete"
+    "seed:delete": "tsx scripts/seed-test-data.ts --delete",
+    "audit": "npm audit --audit-level=high --omit=dev"
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.1032.0",
@@ -36,7 +37,8 @@
     "postcss": "^8.5.10",
     "qs": "^6.14.2",
     "uuid": "^14.0.0",
-    "@tootallnate/once": "^3.0.1"
+    "@tootallnate/once": "^3.0.1",
+    "fast-uri": "^3.1.2"
   },
   "browserslist": [
     "last 2 Chrome versions",
@@ -54,7 +56,7 @@
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
     "aws-cdk": "^2.1118.2",
-    "aws-cdk-lib": "^2.250.0",
+    "aws-cdk-lib": "^2.253.1",
     "constructs": "^10.6.0",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.2.4",
