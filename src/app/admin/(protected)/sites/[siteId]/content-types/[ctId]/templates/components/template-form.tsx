@@ -173,25 +173,6 @@ function buildStarters(ctId: string) {
 </div>`,
     },
     {
-      key: 'list-simple',
-      label: '記事一覧（シンプル）',
-      name: '記事一覧（シンプル）',
-      shortname: 'list-simple',
-      body: `<div class="ct-${ctId}">
-  {{#each items}}
-  <div class="nc-item">
-    <span class="nc-date">{{formatDate createdAt "YYYY/MM/DD"}}</span>
-    <span class="nc-title">{{title}}</span>
-  </div>
-  {{/each}}
-
-  <div class="nc-pager">
-    {{#if tools.hasPrev}}<a data-cms-paginate href="{{tools.prevHref}}">前へ</a>{{/if}}
-    {{#if tools.hasNext}}<a data-cms-paginate href="{{tools.nextHref}}">次へ</a>{{/if}}
-  </div>
-</div>`,
-    },
-    {
       key: 'detail',
       label: '記事詳細（パーツ・埋め込み用）',
       name: '記事詳細',

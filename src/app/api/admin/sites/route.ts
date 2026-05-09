@@ -3,6 +3,7 @@ import { getAdminUser } from '@/lib/admin-auth';
 import { getDocClient, Tables } from '@/lib/dynamodb';
 import { ScanCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { randomBytes } from 'crypto';
+import { initializeSite } from '@/lib/site-initializer';
 
 /** Sites API — GET 一覧 / POST 作成 */
 
@@ -86,6 +87,15 @@ export async function POST(req: NextRequest) {
 
   const db = getDocClient();
   await db.send(new PutCommand({ TableName: Tables.sites, Item: site }));
+
+  // why: サイト作成直後に初期コンテンツタイプ＋テンプレートを自動投入する。
+  //      ユーザーが embed タグをすぐ使い始められる状態にするのが目的。
+  //      初期化に失敗してもサイト自体は作成済みのため、エラーはログのみでレスポンスは返す。
+  try {
+    await initializeSite(site.siteId, db);
+  } catch (err) {
+    console.error('[sites POST] initializeSite 失敗（サイト作成は成功済み）:', err);
+  }
 
   return NextResponse.json({ site }, { status: 201 });
 }
