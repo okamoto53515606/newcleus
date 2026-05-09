@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminUser } from '@/lib/admin-auth';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { logger } from '@/lib/env';
+import { getDocClient } from '@/lib/dynamodb';
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || '';
 const REGION = process.env.AWS_REGION || 'ap-northeast-1';
@@ -117,10 +117,14 @@ export async function POST(request: NextRequest) {
       CacheControl: 'public, max-age=31536000, immutable',
     }));
 
-    // 公開 URL は常に相対パスを返す。
-    // why: 管理画面のオリジンを統一し、ブラウザの CORP 判定で画像が
-    //      ブロックされるケースを避ける。
-    const publicUrl = `/${key}`;
+    // 公開 URL: 本番は CloudFront 絶対 URL を返す。
+    // why: embed.js 経由で外部サイトに埋め込まれたとき、相対 URL では
+    //      画像が埋め込み先ドメインで解決されてリンク切れになる。
+    //      CloudFront 絶対 URL にすることで埋め込み先ドメインに依存しない。
+    //      開発環境では CLOUDFRONT_DOMAIN を無視して相対パスを返す（従来通り）。
+    const cfDomain =
+      process.env.NODE_ENV === 'production' ? process.env.CLOUDFRONT_DOMAIN : null;
+    const publicUrl = cfDomain ? `https://${cfDomain}/${key}` : `/${key}`;
 
     logger.info(`[Upload] S3 アップロード完了: ${key} (${buffer.length} bytes)`);
 

@@ -49,6 +49,28 @@ function htmlHeaders(): Record<string, string> {
   };
 }
 
+/**
+ * DB に保存された相対 /media/ URL を CloudFront 絶対 URL に書き換える
+ *
+ * why: 画像アップロード時に返した URL が相対パス (/media/...) だった場合、
+ *      embed.js で外部サイトに埋め込むと相対 URL が埋め込み先ドメインで解決され
+ *      画像がリンク切れになる。レンダリング後に一括書き換えすることで
+ *      過去に登録済みのコンテンツも含めて修正できる。
+ * - src="/media/   → src="{origin}/media/   （img タグ等）
+ * - href="/media/  → href="{origin}/media/  （a タグ等）
+ * - url("/media/   → url("{origin}/media/   （CSS background-image 等）
+ * - url('/media/   → url('{origin}/media/   （同上）
+ * - url(/media/    → url({origin}/media/    （クォートなし CSS）
+ */
+function rewriteMediaUrls(html: string, origin: string): string {
+  if (!origin || !html) return html;
+  // 属性値の /media/ → 絶対 URL
+  let out = html.replace(/((?:src|href|action)=")(\/media\/)/g, `$1${origin}$2`);
+  // CSS url() の /media/ → 絶対 URL（シングル・ダブル・クォートなし 各パターン）
+  out = out.replace(/(url\(["']?)(\/media\/)/g, `$1${origin}$2`);
+  return out;
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
@@ -165,7 +187,8 @@ export async function GET(
       console.error('[newcleus/render] template compile error (single item):', err);
       return new NextResponse('', { status: 200, headers: htmlHeaders() });
     }
-    return new NextResponse(singleHtml, { status: 200, headers: htmlHeaders() });
+    const singleOrigin = getPublicOrigin(req);
+    return new NextResponse(rewriteMediaUrls(singleHtml, singleOrigin), { status: 200, headers: htmlHeaders() });
   }
   const limit = parseLimit(sp.get('limit'), 10, 100);
   const page = parsePage(sp.get('page'));
@@ -306,5 +329,5 @@ export async function GET(
     return new NextResponse('', { status: 200, headers: htmlHeaders() });
   }
 
-  return new NextResponse(html, { status: 200, headers: htmlHeaders() });
+  return new NextResponse(rewriteMediaUrls(html, origin), { status: 200, headers: htmlHeaders() });
 }
