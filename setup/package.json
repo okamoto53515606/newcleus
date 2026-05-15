@@ -30,7 +30,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.4.2",
-    "next": "^16.2.5",
+    "next": "^16.2.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "typescript": "^6.0.3"
@@ -41,6 +41,7 @@
     "tailwindcss": "^4.2.2"
   },
   "overrides": {
-    "postcss": "^8.5.10"
+    "postcss": "^8.5.10",
+    "fast-xml-builder": "^1.2.0"
   }
 }
