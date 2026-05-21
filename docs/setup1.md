@@ -141,6 +141,14 @@ setup0 画面が表示されたら準備完了です。以下の「Step 0」か�
 3. **「保存して接続テスト」** をクリック → 緑のチェック「✓ AWS キーは設定済みです」が出れば OK。
 4. **「次のステップへ進む（Step 1a）→」** で進む。
 
+> **ネットワークエラーが出る場合（DNS 名前解決の不具合）:**  
+> WSL2 の DNS 設定が不正な状態になると、`git pull` や AWS API 呼び出しが失敗することがあります。  
+> PowerShell から下記コマンドを実行し、DNS を `8.8.8.8` に書き換えてから再試行してください。
+>
+> ```powershell
+> wsl -d newcleus -u ubuntu -- bash -i /home/ubuntu/newcleus/setup/fix-dns.sh
+> ```
+
 ---
 
 ## Step 1a — 管理者ユーザーの作成
