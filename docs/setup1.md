@@ -146,7 +146,7 @@ setup0 画面が表示されたら準備完了です。以下の「Step 0」か�
 > PowerShell から下記コマンドを実行し、DNS を `8.8.8.8` に書き換えてから再試行してください。
 >
 > ```powershell
-> wsl -d newcleus -u ubuntu -- bash -i /home/ubuntu/newcleus/setup/fix-dns.sh
+> wsl -d newcleus -u ubuntu -- bash -c "echo 'nameserver 8.8.8.8' | sudo tee /etc/resolv.conf"
 > ```
 
 ---
