@@ -1,6 +1,6 @@
 {
   "name": "newcleus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
@@ -26,7 +26,7 @@
     "handlebars": "^4.7.9",
     "jose": "^6.2.2",
     "lucide-react": "^0.475.0",
-    "next": "^16.2.6",
+    "next": "^16.2.11",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.2.4",
@@ -38,7 +38,9 @@
     "qs": "^6.14.2",
     "uuid": "^14.0.0",
     "@tootallnate/once": "^3.0.1",
-    "fast-uri": "^3.1.2"
+    "fast-uri": "^3.1.2",
+    "sharp": "^0.35.3",
+    "esbuild": "^0.28.1"
   },
   "browserslist": [
     "last 2 Chrome versions",
@@ -56,10 +58,10 @@
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
     "aws-cdk": "^2.1118.2",
-    "aws-cdk-lib": "^2.253.1",
+    "aws-cdk-lib": "^2.260.0",
     "constructs": "^10.6.0",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.2.6",
+    "eslint-config-next": "^16.2.11",
     "msw": "^2.14.2",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",

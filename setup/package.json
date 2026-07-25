@@ -1,6 +1,6 @@
 {
   "name": "newcleus-setup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
@@ -30,7 +30,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.4.2",
-    "next": "^16.2.6",
+    "next": "^16.2.11",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "typescript": "^6.0.3"
@@ -42,6 +42,7 @@
   },
   "overrides": {
     "postcss": "^8.5.10",
-    "fast-xml-builder": "^1.2.0"
+    "fast-xml-builder": "^1.2.0",
+    "sharp": "^0.35.3"
   }
 }
