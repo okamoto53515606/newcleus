@@ -270,6 +270,8 @@ npm run build
 ```bash
 cat > ~/newcleus/setup/start.sh <<'EOF'
 #!/usr/bin/env bash
+# why: WSL2 の DNS 設定が不正な状態になると、git pull や AWS API 呼び出しが失敗することがあります。DNS を 8.8.8.8 に書き換えます。
+echo 'nameserver 8.8.8.8' | sudo tee /etc/resolv.conf
 # why: dev (Turbopack) は初回コンパイルが重く、低スペック環境で固まりやすい。
 #      build 済み成果物を next start で配信することで起動を一瞬にする。
 source ~/.bashrc
@@ -337,10 +339,11 @@ gh auth login
 
 ```powershell
 cd d:\wsl_backup\
-gh release create v1.0.0 `
+# newcleus-release-notes.md をテキストファイルとして保存してから
+gh release create v1.0.1 `
    D:\wsl_backup\newcleus-latest.tar.gz `
    D:\wsl_backup\newcleus-latest.tar.gz.sha256 `
    --repo okamoto53515606/newcleus `
-   --title "v1.0.0" `
-   --notes "newcleus をリリースしました！"
+   --title "v1.0.1" `
+   --notes-file D:\wsl_backup\newcleus-release-notes.md
 ```
