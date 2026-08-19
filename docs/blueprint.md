@@ -32,7 +32,7 @@
 
 - **想定規模:** 年間20サイト未満
 - **旧資産:** 20年前のNucleus CMS（PHP）の設計思想・DB設計 + AWSベースの個人メディア「homepage-v2」のコード資産
-- **新技術スタック:** Next.js (TypeScript) + AWS（hhomepage資産から流用）
+- **新技術スタック:** Next.js (TypeScript) + AWS（homepage-v2資産から流用）
 
 ---
 
