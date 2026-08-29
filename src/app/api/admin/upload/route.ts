@@ -21,6 +21,8 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getDocClient } from '@/lib/dynamodb';
 // why: S3 アップロードの成功/失敗を CloudWatch Logs に残すための共通ロガー。
 //      console 直接呼び出しを禁止しプロジェクト全体でログ書式を統一している。
+//      注意: この import を落とすと ReferenceError でアップロード API が実質壊れる
+//      （ignoreBuildErrors のためビルドは通ってしまう）。検証済み。
 import { logger } from '@/lib/env';
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || '';

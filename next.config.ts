@@ -6,7 +6,11 @@ const nextConfig: NextConfig = {
   // X-Powered-By ヘッダを抑止しフィンガープリントを減らす
   poweredByHeader: false,
   typescript: {
-    ignoreBuildErrors: true,
+    // why: 型エラーのあるコードを本番デプロイさせないため、ビルド時に型検証を必須化する。
+    //      かつて ignoreBuildErrors: true だったため logger の import 漏れ(TS2304)が
+    //      そのまま本番入りし、画像アップロード API が ReferenceError で壊れる事故が発生。
+    //      型エラーは npm run typecheck と同様ここで確実に落とす。
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [],
