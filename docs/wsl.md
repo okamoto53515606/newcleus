@@ -340,10 +340,10 @@ gh auth login
 ```powershell
 cd d:\wsl_backup\
 # newcleus-release-notes.md をテキストファイルとして保存してから
-gh release create v1.0.1 `
+gh release create v1.0.2 `
    D:\wsl_backup\newcleus-latest.tar.gz `
    D:\wsl_backup\newcleus-latest.tar.gz.sha256 `
    --repo okamoto53515606/newcleus `
-   --title "v1.0.1" `
+   --title "v1.0.2" `
    --notes-file D:\wsl_backup\newcleus-release-notes.md
 ```
