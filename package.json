@@ -1,6 +1,6 @@
 {
   "name": "newcleus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
@@ -26,7 +26,7 @@
     "handlebars": "^4.7.9",
     "jose": "^6.2.2",
     "lucide-react": "^0.475.0",
-    "next": "^16.2.11",
+    "next": "^16.3.3",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.2.4",
@@ -40,7 +40,9 @@
     "@tootallnate/once": "^3.0.1",
     "fast-uri": "^3.1.2",
     "sharp": "^0.35.3",
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "brace-expansion@^1.1.7": "1.1.18",
+    "brace-expansion@^5.0.5": "5.0.9"
   },
   "browserslist": [
     "last 2 Chrome versions",
@@ -57,13 +59,14 @@
     "@types/node": "^20",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
-    "aws-cdk": "^2.1133.0",
-    "aws-cdk-lib": "^2.260.0",
+    "aws-cdk": "^2.1139.0",
+    "aws-cdk-lib": "^2.267.0",
     "constructs": "^10.6.0",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.2.11",
+    "eslint-config-next": "^16.3.3",
     "msw": "^2.14.2",
     "source-map-support": "^0.5.21",
+    "tinymce": "^7.9.3",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }

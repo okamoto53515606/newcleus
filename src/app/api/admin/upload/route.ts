@@ -19,6 +19,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminUser } from '@/lib/admin-auth';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getDocClient } from '@/lib/dynamodb';
+// why: S3 アップロードの成功/失敗を CloudWatch Logs に残すための共通ロガー。
+//      console 直接呼び出しを禁止しプロジェクト全体でログ書式を統一している。
+import { logger } from '@/lib/env';
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || '';
 const REGION = process.env.AWS_REGION || 'ap-northeast-1';
