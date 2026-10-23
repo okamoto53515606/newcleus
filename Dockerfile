@@ -3,9 +3,10 @@
 #
 # why: Node.js 20 は 2026-04-30 に EOL。CVE-2026-111497（Brotli decoder の
 #      out-of-bounds write、Node 22/24/26 が対象）は 24.22.1 で修正済み。
-#      再現性と監査性のため、修正版のパッチバージョンまで固定する。
+#      24-alpine は 24 系の最新パッチを追従するため、今後のセキュリティ修正も
+#      再ビルドで取り込める。CVE-2026-111497 の修正下限は 24.22.1。
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS deps
+FROM public.ecr.aws/docker/library/node:24-alpine AS deps
 
 WORKDIR /app
 
@@ -16,7 +17,7 @@ RUN npm ci --omit=dev
 # ===========================================================
 # Stage 2: Next.js ビルド
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS builder
+FROM public.ecr.aws/docker/library/node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -43,7 +44,7 @@ RUN npm run build
 #      配置することで、adapter が Lambda Extension として自動起動し
 #      CMD (node server.js) を HTTP サーバーとして扱う。
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS runner
+FROM public.ecr.aws/docker/library/node:24-alpine AS runner
 
 WORKDIR /var/task
 

@@ -103,14 +103,15 @@ aws --version   # aws-cli/2.x.x ...
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 source ~/.bashrc
 nvm --version
-nvm install 24.22.1
-nvm use 24.22.1
-nvm alias default 24.22.1
+nvm install 24
+nvm use 24
+nvm alias default 24
 ```
 
 > **why:** Node.js 20 は 2026-04-30 に EOL。CVE-2026-111497（Brotli decoder の
-> out-of-bounds write）は Node 22.23.4 / 24.22.1 / 26.12.1 で修正されたため、
-> 長期サポートの 24 系の修正版 24.22.1 を固定で採用する。
+> out-of-bounds write）は Node 22.23.4 / 24.22.1 / 26.12.1 で修正された。
+> 24 系の最新パッチを追従するため `nvm install 24` で LTS を導入し、
+> 24.22.1 以上であることを前提にする。
 
 ### apt 全体更新 + 開発ツール
 
