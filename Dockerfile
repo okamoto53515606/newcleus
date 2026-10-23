@@ -1,7 +1,11 @@
 # ===========================================================
 # Stage 1: 依存関係インストール
+#
+# why: Node.js 20 は 2026-04-30 に EOL。CVE-2026-111497（Brotli decoder の
+#      out-of-bounds write、Node 22/24/26 が対象）は 24.22.1 で修正済み。
+#      再現性と監査性のため、修正版のパッチバージョンまで固定する。
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:20-alpine AS deps
+FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS deps
 
 WORKDIR /app
 
@@ -12,7 +16,7 @@ RUN npm ci --omit=dev
 # ===========================================================
 # Stage 2: Next.js ビルド
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS builder
 
 WORKDIR /app
 
@@ -31,7 +35,7 @@ RUN npm run build
 # ===========================================================
 # Stage 3: ランタイム（Lambda Web Adapter）
 #
-# why: public.ecr.aws/lambda/nodejs:20 を使わない理由:
+# why: public.ecr.aws/lambda/nodejs:24 を使わない理由:
 #      Lambda Node.js base image の /lambda-entrypoint.sh は CMD[0] が
 #      "module.handler" 形式でないと "entrypoint requires the handler name
 #      to be the first argument" で即終了する。
@@ -39,7 +43,7 @@ RUN npm run build
 #      配置することで、adapter が Lambda Extension として自動起動し
 #      CMD (node server.js) を HTTP サーバーとして扱う。
 # ===========================================================
-FROM public.ecr.aws/docker/library/node:20-alpine AS runner
+FROM public.ecr.aws/docker/library/node:24.22.1-alpine AS runner
 
 WORKDIR /var/task
 

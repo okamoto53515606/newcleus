@@ -97,17 +97,20 @@ sudo ./aws/install
 aws --version   # aws-cli/2.x.x ...
 ```
 
-### Node.js (nvm 経由で Node 22)
+### Node.js (nvm 経由で Node 24)
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 source ~/.bashrc
 nvm --version
-nvm install 22
-nvm use 22
+nvm install 24.22.1
+nvm use 24.22.1
+nvm alias default 24.22.1
 ```
 
-> **why:** Next.js 16 / aws-cdk-lib の最新が要求する Node 20+ を満たすため、長期サポートの 22 を採用。
+> **why:** Node.js 20 は 2026-04-30 に EOL。CVE-2026-111497（Brotli decoder の
+> out-of-bounds write）は Node 22.23.4 / 24.22.1 / 26.12.1 で修正されたため、
+> 長期サポートの 24 系の修正版 24.22.1 を固定で採用する。
 
 ### apt 全体更新 + 開発ツール
 
@@ -340,10 +343,10 @@ gh auth login
 ```powershell
 cd d:\wsl_backup\
 # newcleus-release-notes.md をテキストファイルとして保存してから
-gh release create v1.0.3 `
+gh release create v1.0.4 `
    D:\wsl_backup\newcleus-latest.tar.gz `
    D:\wsl_backup\newcleus-latest.tar.gz.sha256 `
    --repo okamoto53515606/newcleus `
-   --title "v1.0.3" `
+   --title "v1.0.4" `
    --notes-file D:\wsl_backup\newcleus-release-notes.md
 ```
