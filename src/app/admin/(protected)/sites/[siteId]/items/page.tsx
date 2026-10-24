@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { getAdminUser } from '@/lib/admin-auth';
-import { getDocClient, Tables } from '@/lib/dynamodb';
+import { getDocClient, queryAll, Tables } from '@/lib/dynamodb';
 import type { SiteRecord } from '@/app/api/admin/sites/route';
 import type { ContentTypeRecord } from '@/app/api/admin/sites/[siteId]/content-types/route';
 import type { ItemRecord } from '@/app/api/admin/sites/[siteId]/items/route';
@@ -42,15 +42,15 @@ export default async function SiteItemsPage({
   }
 
   const db = getDocClient();
-  const [siteResult, itemsResult, contentTypesResult] = await Promise.all([
+  const [siteResult, items, contentTypesResult] = await Promise.all([
     db.send(new GetCommand({ TableName: Tables.sites, Key: { siteId } })),
-    db.send(
-      new QueryCommand({
-        TableName: Tables.items,
-        KeyConditionExpression: 'siteId = :siteId',
-        ExpressionAttributeValues: { ':siteId': siteId },
-      }),
-    ),
+    // why: Query は 1 回あたり最大 1MB しか返さず、続きを読まないと新しい記事が
+    //      エラーも出ずに一覧から消える（記事数が増えたサイトで実際に発生）。
+    queryAll<ItemRecord>({
+      TableName: Tables.items,
+      KeyConditionExpression: 'siteId = :siteId',
+      ExpressionAttributeValues: { ':siteId': siteId },
+    }),
     db.send(
       new QueryCommand({
         TableName: Tables.contentTypes,
@@ -91,7 +91,7 @@ export default async function SiteItemsPage({
     redirect(`/admin/sites/${siteId}/items?contentTypeId=${activeCtId}&page=1`);
   }
 
-  const allItems = ((itemsResult.Items ?? []) as ItemRecord[])
+  const allItems = items
     .filter((item) => item.contentTypeId === activeCtId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 

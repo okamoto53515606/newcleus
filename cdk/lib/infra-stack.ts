@@ -45,6 +45,16 @@ export class InfraStack extends cdk.Stack {
     const cognitoClientId   = (this.node.tryGetContext('cognitoClientId') as string) ?? '';
     const cognitoDomain     = (this.node.tryGetContext('cognitoDomain') as string) ?? '';
 
+    // why: 公開 URL（CloudFront ドメイン）は Cognito の redirect_uri に使う。
+    //      以前はデプロイ後に Lambda UpdateFunctionConfiguration で後付け注入して
+    //      いたが、CDK デプロイはテンプレートに無い環境変数を消してしまうため、
+    //      再デプロイのたびにログインが redirect_mismatch で壊れた。
+    //      ドメインは単なる文字列なので、初回デプロイ後に setup1b が .env へ書き出し、
+    //      以降は --context / .env から渡す。これで循環依存は生じない
+    //      （Distribution → FunctionUrl → Lambda の依存関係は従来どおり）。
+    //      初回（未確定）のときだけキー自体を出力しない＝後付け注入に委ねる。
+    const cloudfrontDomain = (this.node.tryGetContext('cloudfrontDomain') as string) ?? '';
+
     const prefix = 'newcleus-';
 
     // =========================================================
@@ -150,9 +160,9 @@ export class InfraStack extends cdk.Stack {
         COGNITO_USER_POOL_ID: cognitoUserPoolId,
         COGNITO_CLIENT_ID: cognitoClientId,
         COGNITO_DOMAIN: cognitoDomain,
-        // CLOUDFRONT_DOMAIN / CLOUDFRONT_DISTRIBUTION_ID は distribution 作成後
-        // に setup API 経由で Lambda UpdateFunctionConfiguration で後付け注入す る。
-        // why: Lambda → Distribution → LambdaFunctionUrl → Lambda の循環依存を避けるため。
+        // why: 値が確定している時だけ出力する。空文字を入れると getPublicOrigin() が
+        //      "https://" を返し、Cognito の redirect_uri が壊れてログインできない。
+        ...(cloudfrontDomain ? { CLOUDFRONT_DOMAIN: cloudfrontDomain } : {}),
       },
     });
 

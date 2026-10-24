@@ -6,7 +6,11 @@
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  QueryCommand,
+  type QueryCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 
 const TABLE_PREFIX = process.env.TABLE_PREFIX || 'newcleus-';
 
@@ -45,4 +49,32 @@ export function getDocClient(): DynamoDBDocumentClient {
   });
 
   return docClient;
+}
+
+/**
+ * Query を最後まで（LastEvaluatedKey が尽きるまで）実行して全件を返す。
+ *
+ * why: DynamoDB の Query は 1 回の呼び出しで最大 1MB しか返さない。超過分は
+ *      LastEvaluatedKey で続きを読まないと**エラーにならず静かに欠落**する。
+ *      「全件を取得してから並べ替える」タイプの一覧（管理画面の記事一覧など）で
+ *      ページングを忘れると、件数が 1MB を超えた時点から新しい記事が一覧に
+ *      出てこなくなる（バーキルン移行時に実際に発生した不具合）。
+ */
+export async function queryAll<T = Record<string, unknown>>(
+  params: QueryCommandInput,
+): Promise<T[]> {
+  const db = getDocClient();
+  const items: T[] = [];
+  let lastKey = params.ExclusiveStartKey;
+
+  do {
+    const input: QueryCommandInput = lastKey
+      ? { ...params, ExclusiveStartKey: lastKey }
+      : params;
+    const result = await db.send(new QueryCommand(input));
+    items.push(...((result.Items ?? []) as T[]));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  return items;
 }

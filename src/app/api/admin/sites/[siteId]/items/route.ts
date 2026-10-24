@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { getAdminUser } from '@/lib/admin-auth';
-import { getDocClient, Tables } from '@/lib/dynamodb';
+import { getDocClient, queryAll, Tables } from '@/lib/dynamodb';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,16 +123,15 @@ export async function GET(
   const contentTypeId = req.nextUrl.searchParams.get('contentTypeId')?.trim();
   const status = req.nextUrl.searchParams.get('status')?.trim();
 
-  const db = getDocClient();
-  const result = await db.send(
-    new QueryCommand({
-      TableName: Tables.items,
-      KeyConditionExpression: 'siteId = :siteId',
-      ExpressionAttributeValues: { ':siteId': siteId },
-    }),
-  );
+  // why: 記事が 1MB を超えると Query の 1 回目だけでは取り切れず、新しい記事が
+  //      一覧から静かに消える。件数はサイト規模に比例するため全件読み切る。
+  const allItems = await queryAll<ItemRecord>({
+    TableName: Tables.items,
+    KeyConditionExpression: 'siteId = :siteId',
+    ExpressionAttributeValues: { ':siteId': siteId },
+  });
 
-  let items = (result.Items ?? []) as ItemRecord[];
+  let items = allItems;
 
   if (contentTypeId) {
     items = items.filter((item) => item.contentTypeId === contentTypeId);

@@ -65,3 +65,9 @@ cdk-outputs.json
 
 # .sample-files
 *.sample-files
+
+# 新サイト (Bar Kiln) は独立アプリとして追跡する
+sites/*
+!sites/bar-kiln/
+!sites/bar-kiln/package-lock.json
+!sites/bar-kiln/infra/package-lock.json
