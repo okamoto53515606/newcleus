@@ -66,8 +66,7 @@ cdk-outputs.json
 # .sample-files
 *.sample-files
 
-# 新サイト (Bar Kiln) は独立アプリとして追跡する
-sites/*
-!sites/bar-kiln/
-!sites/bar-kiln/package-lock.json
-!sites/bar-kiln/infra/package-lock.json
+# 新サイト (Bar Kiln) はこのリポジトリでは管理しない
+# why: newcleus 本体とは独立してデプロイ・バージョン管理するアプリのため、
+#      newcleus のリリース（tar.gz 配布物）に混入させない。
+sites/
