@@ -235,7 +235,6 @@ flowchart TB
 
 - 実装方針・注意点は [`.github/copilot-instructions.md`](.github/copilot-instructions.md) にまとめています。
 - 開発時の AI とのやり取りは [prompt_history](prompt_history/) に残しています（AI 共創開発の記録として）。
-- 紹介記事: [AI と 3 日間で開発！Nucleus CMS をリスペクトした SaaS 型マルチテナント CMS「newcleus」を OSS 公開](https://www.okamomedia.tokyo/articles/release-newcleus-multitenant-cms)
 
 ## ライセンス
 
