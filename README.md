@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="#はじめかた">はじめかた</a> ｜ <a href="#できること">できること</a> ｜ <a href="#埋め込み方">埋め込み方</a> ｜ <a href="#アーキテクチャ">アーキテクチャ</a> ｜ <a href="#ドキュメント">ドキュメント</a>
+  <a href="#はじめかた">はじめかた</a> ｜ <a href="#アップデート">アップデート</a> ｜ <a href="#できること">できること</a> ｜ <a href="#埋め込み方">埋め込み方</a> ｜ <a href="#アーキテクチャ">アーキテクチャ</a> ｜ <a href="#ドキュメント">ドキュメント</a>
 </p>
 
 > 名前の由来: "new" + "Nucleus CMS"。20 年前の Nucleus CMS（PHP）の設計思想をリスペクトしつつ、モダンな技術で作り直したプロジェクトです。設計の背景は [blueprint](docs/blueprint.md) にまとめています。
@@ -152,6 +152,30 @@ npm run dev                 # → http://localhost:3001
 ```
 
 > セットアップ画面はリポジトリ直下の `.env`（`setup/` の親ディレクトリ）を読み書きします。Cognito の値は `.env` が正で、`cdk/bin/newcleus.ts` は `--context` 未指定時に `.env` から補完します。
+
+## アップデート
+
+既存環境（配布イメージ・ソースからのどちらでも）を新しい版に更新する手順です。配布イメージを使っている場合、**イメージの取り込み直しは不要**です。WSL 内でアプリを差し替え、セットアップ画面から再デプロイします。
+
+1. WSL 内で最新のアプリに差し替える（`.env` と `setup/setup-state.json` は自動で引き継ぎ、旧ツリーは `~/newcleus.old-*` に退避されます）
+   ```bash
+   (
+     set -euo pipefail
+     curl -fsSL --retry 3 -o /tmp/fetch-app.sh \
+       https://raw.githubusercontent.com/okamoto53515606/newcleus/main/setup/scripts/fetch-app.sh
+     bash -n /tmp/fetch-app.sh   # 壊れたファイル/別物を掴んでいないか構文チェック
+     bash /tmp/fetch-app.sh --dir "$HOME/newcleus" --update --build
+   )
+   ```
+2. セットアップ画面を起動し、`setup1b` →「CDK デプロイを実行（サイト公開）」を押す
+   ```powershell
+   wsl -d newcleus -u ubuntu -- bash -i /home/ubuntu/newcleus/setup/start.sh
+   ```
+3. 管理画面サイドバー下部のバージョンが新しい `vX.Y.Z` になっていることを確認
+
+> アプリコードの変更でも `setup1b`（Docker ビルド込み）が必要です（目安 30〜60 分）。`.env` と `setup/setup-state.json` は消さないでください。
+
+変更種別ごとの反映経路・所要時間・トラブルシュートは **[アップデート手順](docs/update.md)** にまとめています。
 
 ## アーキテクチャ
 
