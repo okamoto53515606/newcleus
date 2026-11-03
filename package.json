@@ -61,7 +61,7 @@
     "@types/node": "^20",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
-    "aws-cdk": "^2.1139.0",
+    "aws-cdk": "^2.1147.0",
     "aws-cdk-lib": "^2.273.0",
     "constructs": "^10.6.0",
     "eslint": "^9.39.1",

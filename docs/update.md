@@ -138,6 +138,7 @@ rm -rf ~/newcleus.old-*    # 動作確認後
 | `setup/setup-state.json` を引き継いでいる | 完了済みの Step が未完了扱いになり、サイドバーがロック | 退避ファイルを戻す。無い場合は該当 Step を再実行 |
 | `setup` を再ビルドしている | 画面が旧版のまま・新しい画面が出ない | `cd ~/newcleus/setup && npm install && npm run build` → セットアップ画面を再起動 |
 | 構造変更は `setup1b` で反映する | コードだけ差し替えても、新テーブルや新 Lambda が無く 500 になる | `setup1b` を実行する（差し替えだけでは AWS 側は変わらない） |
+| ルートの `aws-cdk`（CLI）と `aws-cdk-lib` の組が整合している | `setup1b` が `Cloud assembly schema version mismatch` / `This CDK CLI is not compatible with the CDK library` で停止する | ルートで `npm install` を実行して CLI を `package.json` の指定まで上げる（`node -e 'console.log(require("aws-cdk/package.json").version)'` で確認） |
 | 配布物は public リポジトリの tar から作る | `fetch-app.sh` の `curl` が 404/401 で止まる | リポジトリの公開設定と `--ref` を確認。private にする場合はトークン付き URL が必要 |
 
 ---
