@@ -10,9 +10,9 @@
 ## 全体フロー
 
 1. **Windows**: クリーンな Ubuntu WSL を作成
-2. **WSL (Ubuntu)**: 必要ツール導入 → リポジトリ取得 → ビルド → 起動スクリプト配置
+2. **WSL (Ubuntu)**: 必要ツール導入 → 環境チェック → リポジトリ取得 + ビルド（`fetch-app.sh`）→ 起動スクリプトの確認
 3. **Windows**: `wsl --export` で tar 化
-4. **WSL**: tar を gzip 圧縮 + sha256 算出
+4. **WSL**: tar を pigz で圧縮 + sha256 算出
 5. **Windows**: `gh release create` で GitHub Release にアップロード
 
 各ステップでコマンドの実行場所が **Windows (PowerShell)** か **WSL (Ubuntu)** かを明示する。
@@ -214,25 +214,9 @@ sudo find /var/log -type f -exec cp /dev/null {} \;
 
 ---
 
-## 5. リポジトリ取得 (WSL)
+## 5. 環境チェック (WSL)
 
-```bash
-mkdir -p ~/newcleus
-cd ~/newcleus
-curl -L https://github.com/okamoto53515606/newcleus/archive/refs/heads/main.tar.gz \
-  | tar -xz --strip-components=1
-
-# why: 配布イメージサイズ削減 & ユーザーが触る必要のないファイルを除く
-rm -rf docs prompt_history test scripts
-
-cp env_template.txt .env
-```
-
----
-
-## 6. 環境チェック (WSL)
-
-すべてバージョンが出ること、Docker daemon が OK であることを確認。
+すべてバージョンが出ること、Docker daemon が OK であることを確認。`fetch-app.sh` は Node 24 系を前提にする。
 
 ```bash
 echo "=== versions ===" && \
@@ -249,41 +233,47 @@ unzip -v | head -1
 
 ---
 
-## 7. 依存インストール & ビルド (WSL)
+## 6. リポジトリ取得 & ビルド (WSL)
 
-> **why:** 配布後の初回起動を高速化するため、`npm install` と setup の `next build` を配布側で済ませて `node_modules` / `.next` ごとイメージに固める。  
-> ルート (`~/newcleus`) は CDK 用依存だけが必要 (`aws-cdk-lib`, `@types/node` 等)。Next.js 本体の build はランタイムでは Lambda コンテナビルド経由で行うため不要。
+取得・不要ファイルの除去・`.env` 作成・依存インストール・`setup` のビルド・prune は
+[setup/scripts/fetch-app.sh](../setup/scripts/fetch-app.sh) に集約している。イメージ作成では `--fresh --dist` で実行する。
 
 ```bash
-# ルート: CDK 用依存のみ
-cd ~/newcleus
-rm -rf node_modules .next
-npm install
+# why: 手元のスクリプトに依存すると、修正済みの挙動（退避・引き継ぎ・ビルド検証）が効かない。
+#      必ず main から最新を取得し、取得に失敗したらそこで止める（古いもので続行しない）。
+(
+  set -euo pipefail
+  curl -fsSL --retry 3 -o /tmp/fetch-app.sh \
+    https://raw.githubusercontent.com/okamoto53515606/newcleus/main/setup/scripts/fetch-app.sh
+  bash -n /tmp/fetch-app.sh   # 壊れたファイル/別物を掴んでいないか構文チェック
 
-# setup: 依存 + Next.js プロダクションビルド
-cd ~/newcleus/setup
-rm -rf node_modules .next
-npm install
-npm run build
+  # --fresh: .env を env_template.txt から作る（初回セットアップ用）
+  # --dist : setup を npm install → next build し、devDependencies を prune --production する
+  bash /tmp/fetch-app.sh --dir "$HOME/newcleus" --fresh --dist
+)
 ```
+
+> **why:** 配布後の初回起動を高速化するため、`npm install` と setup の `next build` を配布側で済ませて `node_modules` / `.next` ごとイメージに固める。
+> ルート (`~/newcleus`) は CDK 用依存だけが必要 (`aws-cdk-lib`, `@types/node` 等)。Next.js 本体の build はランタイムでは Lambda コンテナビルド経由で行うため不要。
+
+> **注意:** `--fresh` は `.env` を `env_template.txt` から作り直す。AWS キー等を入力済みの環境では使わない（既存環境の更新は `--update --build`）。
+
+> **スクリプトが行うこと:** ダウンロード → レイアウト検証（`package.json` / `setup` / `env_template.txt`）→ `prompt_history`・`test` の除去 → 旧ツリーの退避 → `.env` / `setup/setup-state.json` の引き継ぎ → `npm install` → `setup` の `next build` → `setup/.next/BUILD_ID` の存在確認。途中で失敗しても既存ツリーは退避されるまで触らない。
+
+> **バージョンの確認:** 焼き込まれたアプリのバージョンは `~/newcleus/package.json` の `version`。セットアップ画面自体にはバージョン表記が無いため、出荷前に `setup/.next/BUILD_ID` の日時と `package.json` の `version` を突き合わせる。**バージョンを上げたら必ず setup を再ビルドしてから export する** こと（build 済み `.next` を使い回すと画面だけ古いまま残る）。
 
 ---
 
-## 8. 起動スクリプト配置 (WSL)
+## 7. 起動スクリプト (WSL)
+
+`setup/start.sh` はリポジトリに含まれているため、生成作業は不要。実行ビットだけ確認する。
 
 ```bash
-cat > ~/newcleus/setup/start.sh <<'EOF'
-#!/usr/bin/env bash
-# why: WSL2 の DNS 設定が不正な状態になると、git pull や AWS API 呼び出しが失敗することがあります。DNS を 8.8.8.8 に書き換えます。
-echo 'nameserver 8.8.8.8' | sudo tee /etc/resolv.conf
-# why: dev (Turbopack) は初回コンパイルが重く、低スペック環境で固まりやすい。
-#      build 済み成果物を next start で配信することで起動を一瞬にする。
-source ~/.bashrc
-cd ~/newcleus/setup
-npm run start
-EOF
-chmod +x ~/newcleus/setup/start.sh
+ls -l ~/newcleus/setup/start.sh    # -rwxr-xr-x になっていること
+chmod +x ~/newcleus/setup/start.sh # 付いていなければ付与（通常は tar がモードを保持するので不要）
 ```
+
+> **why:** 以前はこの手順でヒアドキュメントから `start.sh` を生成していたが、`/home/ubuntu/newcleus` 固定の内容になり、開発サンドボックスなど別の配置では動かなかった。スクリプトは `BASH_SOURCE` から自分の位置を解決する実装をリポジトリ側に置いたため、手順は「生成」ではなく「実行ビットの確認」だけにした。CRLF 化を防ぐため `.gitattributes` で `*.sh text eol=lf` を指定している。
 
 WSL を抜ける:
 
@@ -293,7 +283,7 @@ exit
 
 ---
 
-## 9. 起動テスト (Windows)
+## 8. 起動テスト (Windows)
 
 PowerShell から:
 
@@ -305,7 +295,7 @@ wsl -d Ubuntu -u ubuntu -- bash -i /home/ubuntu/newcleus/setup/start.sh
 
 ---
 
-## 10. WSL イメージのエクスポート (Windows)
+## 9. WSL イメージのエクスポート (Windows)
 
 ```powershell
 d:
@@ -317,20 +307,25 @@ wsl --export Ubuntu newcleus-latest.tar
 
 ---
 
-## 11. 圧縮 + ハッシュ算出 (WSL)
+## 10. 圧縮 + ハッシュ算出 (WSL)
 
 ```bash
+# why: pigz は gzip のマルチコア版。出力は gzip 完全互換で、
+#      コア数に比例して圧縮時間が短縮される（8 コアなら理論上 ~8 倍高速）。
+#      未インストールの場合のみ apt で導入する。
+sudo apt-get install -y pigz
+
 cd /mnt/d/wsl_backup
-gzip -9 -k newcleus-latest.tar
+pigz -9 -k newcleus-latest.tar
 sha256sum newcleus-latest.tar.gz > newcleus-latest.tar.gz.sha256
 ls -l --si
 ```
 
-> **why:** GitHub Release の単一アセットは 2 GB 上限。`gzip -9` で WSL イメージを圧縮し、ダウンロード後の改ざん検知のため sha256 を同梱する。
+> **why:** GitHub Release の単一アセットは 2 GB 上限。`pigz -9`（並列 gzip）で WSL イメージを圧縮し、ダウンロード後の改ざん検知のため sha256 を同梱する。`gzip -d` で展開できる完全互換形式のため受け取り側への影響はない。
 
 ---
 
-## 12. GitHub Release 作成 (Windows)
+## 11. GitHub Release 作成 (Windows)
 
 初回のみ `gh` CLI 導入と認証:
 
@@ -351,3 +346,42 @@ gh release create v1.0.5 `
    --title "v1.0.5" `
    --notes-file D:\wsl_backup\newcleus-release-notes.md
 ```
+
+> **リリースノートの型:** [release-notes-template.md](./release-notes-template.md) を使う。**「アップデート手順（既存ユーザー）」を必ず含める**こと。配布済みイメージの利用者は CDK コマンドを叩かず、セットアップ画面の `setup1b` から反映する。
+
+---
+
+## 12. 配布後のアップデート（利用者向け）
+
+> **why:** 配布済みイメージの利用者は、CDK コマンドではなくセットアップ画面のボタンで更新する。差し替え時に消してはいけないファイル（`.env` / `setup/setup-state.json`）と、コード変更には `setup1b` の再デプロイが必要であることを、利用者向けに明文化しておく必要がある。
+
+手順は [update.md](./update.md) に集約している。リリースノートには同ドキュメント §6 の型で「押すボタン」だけを書く。
+
+既存ユーザーは `fetch-app.sh --update --build` でファイルを差し替える（イメージの再取り込みは不要）。
+
+```bash
+(
+  set -euo pipefail
+  curl -fsSL --retry 3 -o /tmp/fetch-app.sh \
+    https://raw.githubusercontent.com/okamoto53515606/newcleus/main/setup/scripts/fetch-app.sh
+  bash -n /tmp/fetch-app.sh
+  bash /tmp/fetch-app.sh --dir "$HOME/newcleus" --update --build
+)
+```
+
+---
+
+## チェックリスト
+
+イメージ出荷前に最低限確認:
+
+- [ ] `wsl -d Ubuntu -u ubuntu -- bash -i /home/ubuntu/newcleus/setup/start.sh` で `Ready in ...` が出る
+- [ ] `http://localhost:3001/setup0` が表示される
+- [ ] `docker info` が成功する（daemon 自動起動）
+- [ ] `~/newcleus/setup/.next/BUILD_ID` が存在し、`~/newcleus/node_modules` も存在する
+- [ ] `~/newcleus/package.json` の `version` がリリースタグと一致している（`setup` を再ビルドしてから export したか）
+- [ ] `~/newcleus/.env` が `env_template.txt` のコピーである（AWS キー等が混入していない）
+- [ ] `ls ~/newcleus/prompt_history` が失敗する（配布物から除かれている）
+- [ ] `~/newcleus/setup/start.sh` に実行ビットが付いている（`-rwxr-xr-x`）
+
+> 個人情報混入リスクは「`wsl --install` でクリーンな Ubuntu を作り、GitHub public リポジトリ以外からファイルを持ち込まない」運用で回避する。`.env` は `env_template.txt` のコピーで、AWS キー等は受け取り側が setup 画面から入力する設計。

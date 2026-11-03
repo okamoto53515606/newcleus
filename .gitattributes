@@ -1,0 +1,7 @@
+# why: 配布 WSL イメージ内で直接実行する .sh は必ず LF であること。
+#      core.autocrlf=true の Windows 環境で checkout すると CRLF になり、
+#      `#!/usr/bin/env bash\r` を bash が解釈できず "bad interpreter" で落ちる。
+*.sh text eol=lf
+
+# why: 属性ファイル自体が CRLF になると行末に \r が付き、上のパターンが効かなくなる。
+.gitattributes text eol=lf
