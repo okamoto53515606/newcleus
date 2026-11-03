@@ -169,7 +169,7 @@ rm -rf ~/newcleus.old-*    # 動作確認後
 5. 公開サイトを開き直す（HTML はキャッシュされないため、キャッシュ削除は不要）
 ```
 
-> **配布側の確認:** リリース用イメージを作るときは `fetch-app.sh --fresh --dist` を実行し、`setup` を**再ビルドしてから**エクスポートする（`docs/wsl.md` §6 と §12 のチェックリスト）。
+> **配布側の確認:** リリース用イメージはインストーラの [build-wsl-image.ps1](https://github.com/okamoto53515606/homepage-v2-installer/blob/main/newcleus/build-wsl-image.ps1) が `fetch-app.sh --fresh --dist --yes` を実行して `setup` を**再ビルドしてから**エクスポートする（手順は [newcleus / README.md](https://github.com/okamoto53515606/homepage-v2-installer/blob/main/newcleus/README.md)、概要は [wsl.md](./wsl.md)）。
 
 ---
 

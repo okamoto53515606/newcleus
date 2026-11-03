@@ -9,7 +9,7 @@
 1. このファイルをコピーして本文を作る（リポジトリには残さず、`gh release create --notes-file` に渡す）
 2. `vX.Y.Z` を実際のバージョンに置き換える
 3. 「アップデート手順」は `docs/update.md` §6 の型から転記する（コマンドを手で書き起こさない）
-4. リリース後、`docs/wsl.md` §11 の `gh release create` のバージョン表記も更新する
+4. イメージの作成とリリースは [homepage-v2-installer / newcleus / README.md](https://github.com/okamoto53515606/homepage-v2-installer/blob/main/newcleus/README.md) の手順で行う（`docs/wsl.md` は参照先の一覧のみ）
 
 ---
 
