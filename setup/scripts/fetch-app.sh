@@ -20,7 +20,7 @@
 #   bash setup/scripts/fetch-app.sh                    # 自動判定（.env があれば update）
 #   bash setup/scripts/fetch-app.sh --update --build    # 既存環境の更新 + セットアップ再ビルド
 #   bash setup/scripts/fetch-app.sh --fresh --dist      # 配布イメージ作成用（ビルド + prune）
-#   bash setup/scripts/fetch-app.sh --ref v1.0.5 --yes  # タグ指定（既定は main）
+#   bash setup/scripts/fetch-app.sh --ref v1.0.6 --yes  # タグ指定（既定は main）
 #
 # オプション:
 #   --fresh        新規扱い。.env は env_template.txt から作る

@@ -13,7 +13,11 @@ const TinyEditor = dynamic(
   { ssr: false },
 );
 
-const TINYMCE_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js';
+// why: TinyMCE 7.9.3 は media プラグインの `data-mce-object` 経由の XSS
+//      (GHSA-mf2p-h6hf-fcwm) の影響を受ける。7 系の修正版 7.9.4 は npm に未公開の
+//      ため、修正済みの 8 系 CDN を参照する。npm 側の tinymce も 8 系に揃え、
+//      型定義と実体のバージョン差で事故が起きないようにしている。
+const TINYMCE_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js';
 
 interface ItemFormProps {
   siteId: string;
@@ -472,6 +476,10 @@ export function ItemForm({ siteId, itemId, fixedContentTypeId }: ItemFormProps) 
         </p>
         <TinyEditor
           tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
+          // why: TinyMCE 8 系はセルフホスト時に license_key が必須で、未指定だと
+          //      エディタが readonly になる。本プロジェクトは GPL 版を使うため 'gpl'。
+          //      init.license_key はラッパー側で上書きされるので prop で渡す。
+          licenseKey="gpl"
           value={body}
           onEditorChange={setBody}
           init={{

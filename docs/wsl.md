@@ -339,12 +339,12 @@ gh auth login
 ```powershell
 cd d:\wsl_backup\
 # newcleus-release-notes.md をテキストファイルとして保存してから
-gh release create v1.0.5 `
+gh release create v1.0.6 `
    D:\wsl_backup\newcleus-latest.tar.gz `
    D:\wsl_backup\newcleus-latest.tar.gz.sha256 `
    --repo okamoto53515606/newcleus `
-   --title "v1.0.5" `
-   --notes-file D:\wsl_backup\newcleus-release-notes.md
+   --title "v1.0.6" `
+   --notes-file D:\wsl_backup\newcleus-release-notes-v1.0.6.md
 ```
 
 > **リリースノートの型:** [release-notes-template.md](./release-notes-template.md) を使う。**「アップデート手順（既存ユーザー）」を必ず含める**こと。配布済みイメージの利用者は CDK コマンドを叩かず、セットアップ画面の `setup1b` から反映する。
