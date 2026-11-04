@@ -64,6 +64,17 @@ TARGET_BASE=https://staging.example.com ./scripts/dast/zap-baseline.sh
 | CloudFront キャッシュ汚染 | Full Scan 後に invalidation を実行する（手順は `docs/security/dast.md`） |
 | Lambda 同時実行の圧迫 | 各スクリプトに `-m` / `-T` の時間上限を設定。四半期の Full Scan はアクセスが少ない時間帯に実行 |
 
+### 書き込み系を検査するときの注意（OAC の payload ハッシュ）
+
+CloudFront OAC は、リクエストボディの SHA256 と `x-amz-content-sha256` ヘッダが
+一致しないリクエストを **エッジで 403** にする。つまりヘッダを付けずに POST/PUT を
+投げると「アプリが認可で弾いた」のか「エッジが署名で弾いた」のか区別できない。
+
+`admin-probe.sh` は実クライアント（`fetchWithSigning()`）と同じヘッダを付けて
+アプリ層まで到達させている。この挙動を忘れて素の curl で検査すると、
+**認可漏れがあっても 403 が返って PASS に見える**ため注意。
+
+
 ## 誤検知（False Positive）の triage
 
 `zap.conf` に `IGNORE` を追記する。**根拠をコメントで書けないものは IGNORE しない**

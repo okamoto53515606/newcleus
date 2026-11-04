@@ -38,7 +38,16 @@ CURL=(curl -sS --max-time 20 -o /tmp/dast-probe-body -w '%{http_code}')
 probe_api() {
   local method="$1" path="$2" body="${3:-}"
   local args=(-X "${method}")
-  [[ -n "${body}" ]] && args+=(-H 'Content-Type: application/json' --data "${body}")
+  if [[ -n "${body}" ]]; then
+    # why: CloudFront OAC は「実際のボディの SHA256」と x-amz-content-sha256 が
+    #      一致しないリクエストをエッジで 403 にする。アプリの認可判定まで
+    #      到達させたいので、実クライアント（fetchWithSigning）と同じヘッダを付ける。
+    #      これを付けないと「アプリが 401 を返した」のか「エッジが弾いた」のか
+    #      区別できず、認可の検査にならない。
+    local hash
+    hash="$(printf '%s' "${body}" | sha256sum | cut -d' ' -f1)"
+    args+=(-H 'Content-Type: application/json' -H "x-amz-content-sha256: ${hash}" --data "${body}")
+  fi
 
   local code
   code="$("${CURL[@]}" "${args[@]}" "${TARGET_BASE}${path}" || echo "000")"
