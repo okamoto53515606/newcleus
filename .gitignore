@@ -70,3 +70,8 @@ cdk-outputs.json
 # why: newcleus 本体とは独立してデプロイ・バージョン管理するアプリのため、
 #      newcleus のリリース（tar.gz 配布物）に混入させない。
 sites/
+
+# DAST (OWASP ZAP) 生レポート
+# why: エンドポイント・payload・証跡を含むため公開リポジトリに置かない。
+#      公開するのは docs/security/reports/ のサマリのみ。
+/zap-reports/

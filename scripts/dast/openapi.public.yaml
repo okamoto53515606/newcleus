@@ -1,0 +1,104 @@
+# why:
+#   ZAP API Scan に「攻撃してよい面」を明示するための定義。
+#
+#   最重要の設計判断: **GET のみを記載する**。
+#     本番環境にはテスト用の代替環境が無いため、ZAP に POST/PUT/DELETE を
+#     投げさせると DynamoDB にテストレコードが残留する危険がある。
+#     公開 API は仕様上 GET 専用なので、ここに GET だけを書けば
+#     「本番に書き込みが発生し得ない」ことを定義レベルで保証できる。
+#     管理 API の認可確認は zap ではなく admin-probe.sh（アサーション方式）で行う。
+#
+#   siteId / contentType はスクリプトが実行時に実値へ置換する（公開リポジトリに
+#   テナント ID を固定しないため）。プレースホルダは __SITE_ID__ / __CONTENT_TYPE__。
+#
+#   パラメータ網羅について:
+#     flag0-9 / text0-9 / date0-9_from|to は同一コードパスで添字だけが違うため、
+#     代表として 0 番のみ定義する（10 個並べても検出結果は変わらず、
+#     メンテナンスコストだけが増える）。個別に挙動が違うと判明した時点で追加する。
+
+openapi: 3.0.3
+info:
+  title: newcleus public API
+  version: "1.0"
+  description: 認証不要の公開 API。GET のみ。
+servers:
+  - url: __TARGET_BASE__
+
+paths:
+  /api/v1/sites/__SITE_ID__/items:
+    get:
+      operationId: listItems
+      parameters:
+        - name: contentType
+          in: query
+          required: true
+          schema: { type: string, default: "__CONTENT_TYPE__" }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: sort_by
+          in: query
+          schema: { type: string, default: createdAt }
+        - name: flag0
+          in: query
+          schema: { type: string, enum: ["0", "1", "true", "false"] }
+        - name: text0
+          in: query
+          schema: { type: string }
+        - name: date0_from
+          in: query
+          schema: { type: string, format: date }
+        - name: date0_to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200": { description: OK }
+        "400": { description: Bad Request }
+        "404": { description: Not Found }
+
+  /api/v1/sites/__SITE_ID__/items/{itemId}:
+    get:
+      operationId: getItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+        "404": { description: Not Found }
+
+  /api/v1/sites/__SITE_ID__/render:
+    get:
+      operationId: renderItems
+      parameters:
+        - name: contentType
+          in: query
+          required: true
+          schema: { type: string, default: "__CONTENT_TYPE__" }
+        - name: template
+          in: query
+          required: true
+          schema: { type: string, default: "list-modal" }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        "200": { description: OK }
+        "400": { description: Bad Request }
+
+  /api/v1/sites/__SITE_ID__/embed.js:
+    get:
+      operationId: embedJs
+      parameters:
+        - name: contentType
+          in: query
+          schema: { type: string, default: "__CONTENT_TYPE__" }
+      responses:
+        "200": { description: OK }
