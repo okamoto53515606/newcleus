@@ -34,7 +34,8 @@ import { logger } from './env';
 const ADMIN_SESSION_COOKIE_NAME = 'admin_session';
 
 export interface AdminUser {
-  isAuthenticated: boolean;
+  /** 常に true。未認証は `getAdminUser()` が null を返すことで表現する。 */
+  isAuthenticated: true;
   email?: string;
   sub?: string;
   /** Cognito カスタム属性: 'admin' | 'siteadmin' */
@@ -164,13 +165,19 @@ async function lookupCognitoAttributes(
  *  2. sub・cognito:username を JWT から取得（改ざん不能）
  *  3. AdminGetUser API で最新の custom:role / custom:siteIds を取得
  *     （ID トークンの claim には依存しない）
+ *
+ * 【未認証時の戻り値】
+ *   null を返す。「未認証を表すオブジェクト」を返す設計にすると、呼び出し側の
+ *   `if (!user)` が常に偽になり、認可ガードを書いたつもりで素通りする
+ *   （実際に `/api/admin/auth/me` と `/api/admin/sites` が未認証で 200 を返していた）。
+ *   null を返す型にすることで、ガード漏れを TypeScript が検出できる。
  */
-export async function getAdminUser(): Promise<AdminUser> {
+export async function getAdminUser(): Promise<AdminUser | null> {
   const cookieStore = await cookies();
   const adminCookie = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
 
   if (!adminCookie) {
-    return { isAuthenticated: false };
+    return null;
   }
 
   try {
@@ -184,7 +191,7 @@ export async function getAdminUser(): Promise<AdminUser> {
 
     if (!sub || !cognitoUsername) {
       logger.error('[AdminAuth] JWT に sub または cognito:username が含まれていません');
-      return { isAuthenticated: false };
+      return null;
     }
 
     // Cognito API で最新の custom 属性を取得（JWTのclaimには依存しない）
@@ -204,7 +211,7 @@ export async function getAdminUser(): Promise<AdminUser> {
     } else {
       logger.error(`[AdminAuth] Cognito JWT 検証エラー: ${errorMessage}`);
     }
-    return { isAuthenticated: false };
+    return null;
   }
 }
 

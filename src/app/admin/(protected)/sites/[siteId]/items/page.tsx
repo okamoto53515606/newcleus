@@ -37,7 +37,7 @@ export default async function SiteItemsPage({
   const q = await searchParams;
   const user = await getAdminUser();
 
-  if (!user.isAuthenticated || !canAccessSite(user, siteId)) {
+  if (!user || !canAccessSite(user, siteId)) {
     return <p className="text-sm text-red-600">このサイトの記事にアクセスする権限がありません。</p>;
   }
 

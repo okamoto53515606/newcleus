@@ -64,7 +64,7 @@ function buildDummyItems(fields: FieldDefinition[], count = 3) {
  */
 export async function POST(req: NextRequest) {
   const user = await getAdminUser();
-  if (!user?.isAuthenticated) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

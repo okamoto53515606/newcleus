@@ -14,7 +14,7 @@ export default async function AdminDashboardPage({
 }) {
   const params = await searchParams;
   const user = await getAdminUser();
-  if (!user.isAuthenticated) return null;
+  if (!user) return null;
 
   const db = getDocClient();
   let sites: SiteRecord[] = [];

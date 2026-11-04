@@ -111,7 +111,7 @@ export async function GET(
   { params }: { params: Promise<{ siteId: string }> },
 ) {
   const user = await getAdminUser();
-  if (!user.isAuthenticated) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -154,7 +154,7 @@ export async function POST(
   { params }: { params: Promise<{ siteId: string }> },
 ) {
   const user = await getAdminUser();
-  if (!user.isAuthenticated) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

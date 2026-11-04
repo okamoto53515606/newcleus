@@ -23,7 +23,7 @@ export default async function EditTenantPage({
   params: Promise<{ userId: string }>;
 }) {
   const user = await getAdminUser();
-  if (!user?.isAuthenticated) redirect('/admin/login');
+  if (!user) redirect('/admin/login');
   if (user.role !== 'admin') redirect('/admin');
 
   const { userId } = await params;

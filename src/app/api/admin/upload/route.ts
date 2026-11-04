@@ -58,10 +58,10 @@ function toYYYYMMDDHHMMSS(date: Date): string {
 
 export async function POST(request: NextRequest) {
   const adminUser = await getAdminUser();
-  if (!adminUser.isAuthenticated) {
+  if (!adminUser) {
     return NextResponse.json(
-      { status: 'error', message: '管理者権限がありません。' },
-      { status: 403 }
+      { status: 'error', message: '認証が必要です。' },
+      { status: 401 }
     );
   }
 

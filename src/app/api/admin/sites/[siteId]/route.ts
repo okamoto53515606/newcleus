@@ -44,9 +44,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ site
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ siteId: string }> }) {
   const user = await getAdminUser();
+  // why: 未認証(401)と権限不足(403)を区別する。監視側で「ログインしていないだけ」と
+  //      「ログイン済みだが権限が無い」を取り違えないようにするため。
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // why: サイトの名称・設定変更は管理者権限が必要。
   //      siteadmin はコンテンツ編集のみ許可し、サイト設定変更は不可とする。
-  if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { siteId } = await params;
 
@@ -78,7 +81,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ site
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ siteId: string }> }) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

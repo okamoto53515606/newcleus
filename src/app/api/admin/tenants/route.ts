@@ -35,7 +35,10 @@ function getCognitoClient() {
  */
 export async function GET(_req: NextRequest) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -85,7 +88,10 @@ export async function GET(_req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

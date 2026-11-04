@@ -38,7 +38,10 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -86,7 +89,10 @@ export async function PUT(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -133,7 +139,10 @@ export async function DELETE(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const user = await getAdminUser();
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

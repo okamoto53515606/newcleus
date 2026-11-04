@@ -22,7 +22,7 @@ export default async function AdminProtectedLayout({
   children: React.ReactNode;
 }>) {
   const adminUser = await getAdminUser();
-  if (!adminUser.isAuthenticated) {
+  if (!adminUser) {
     redirect('/admin/login');
   }
 

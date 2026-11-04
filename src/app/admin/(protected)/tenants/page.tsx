@@ -28,7 +28,7 @@ interface TenantUser {
 
 export default async function TenantsPage() {
   const user = await getAdminUser();
-  if (!user?.isAuthenticated) redirect('/admin/login');
+  if (!user) redirect('/admin/login');
   // why: テナント管理は admin 専用。siteadmin は自分のサイトのコンテンツのみ管理可能。
   if (user.role !== 'admin') redirect('/admin');
 
