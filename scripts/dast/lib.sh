@@ -38,10 +38,15 @@ fi
 TARGET_BASE="${TARGET_BASE%/}"
 
 # スキャン対象テナント
-#   why: SITE_ID / CONTENT_TYPE をリポジトリに固定しない（公開リポジトリのため）。
-#        実値は環境変数で渡し、未指定時のみ既定のテストサイトを使う。
-SITE_ID="${SITE_ID:-9ada961d5d288cba3742}"
-CONTENT_TYPE="${CONTENT_TYPE:-04b81d1e8d08c51449f0}"
+#   why: SITE_ID / CONTENT_TYPE は環境ごとに異なる識別子で、newcleus は配布物でもある。
+#        公開リポジトリに特定环境の値を固定しないため、既定値を持たせず実行時に渡す。
+#        認可プローブは ID の実在性より前に認証判定されるため、ダミー ID でも成立する。
+SITE_ID="${SITE_ID:-}"
+CONTENT_TYPE="${CONTENT_TYPE:-}"
+
+# 認可プローブ用のプレースホルダ（実在しない ID）
+PROBE_SITE_ID="${SITE_ID:-00000000000000000000}"
+PROBE_CT_ID="${CONTENT_TYPE:-00000000000000000000}"
 
 mkdir -p "${REPORT_DIR}"
 

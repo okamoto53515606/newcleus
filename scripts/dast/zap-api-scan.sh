@@ -19,6 +19,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 SPEC_OUT="${REPORT_DIR}/openapi.generated.yaml"
 
+if [[ -z "${SITE_ID}" || -z "${CONTENT_TYPE}" ]]; then
+  echo "[api-scan] SITE_ID と CONTENT_TYPE を指定してください" >&2
+  echo "  例: SITE_ID=<siteId> CONTENT_TYPE=<ctId> ./scripts/dast/zap-api-scan.sh" >&2
+  echo "  why: テナント固有の ID はリポジトリに固定しない（公開リポジトリのため）" >&2
+  exit 1
+fi
+
 # why: テナント ID を公開リポジトリの YAML に固定しないため、実行時に実値へ置換する。
 #      sed の区切りは | （URL に / が含まれるため）。
 sed -e "s|__TARGET_BASE__|${TARGET_BASE}|g" \

@@ -26,6 +26,12 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
+# why: 認可プローブが見たいのは「未認証で弾かれるか」だけで、テナントの実在性は
+#      関係ない（認証判定は ID の参照より前に行われる）。実在する ID を
+#      公開リポジトリに固定しないため、未指定時はダミー ID を使う。
+SITE_ID="${PROBE_SITE_ID}"
+CONTENT_TYPE="${PROBE_CT_ID}"
+
 PASS=0
 WARN=0
 FAIL=0

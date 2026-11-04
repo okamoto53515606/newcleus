@@ -33,9 +33,14 @@ ZAP の能動スキャンと、ZAP では検出力が出ない領域（未認証
 ```bash
 ./scripts/dast/admin-probe.sh
 ./scripts/dast/zap-baseline.sh
-./scripts/dast/zap-api-scan.sh       # SITE_ID / CONTENT_TYPE は環境変数で上書き可
+SITE_ID=<siteId> CONTENT_TYPE=<ctId> ./scripts/dast/zap-api-scan.sh
 ./scripts/dast/zap-full-scan.sh
 ```
+
+`zap-api-scan.sh` だけは `SITE_ID` / `CONTENT_TYPE` が必須。
+`why: テナント固有の ID は環境ごとに異なり、newcleus は配布物でもあるため、
+公開リポジトリに値を固定しない。`
+`admin-probe.sh` は「未認証で弾かれるか」しか見ないため、未指定ならダミー ID を使う。
 
 別環境を叩く場合:
 
