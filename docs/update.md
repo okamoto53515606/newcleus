@@ -63,7 +63,7 @@
 
 - `( ... )` はサブシェルなので、途中で失敗しても WSL のシェル自体は閉じない（終了コードは `echo $?` で確認できる）
 - `--dir` は必須。スクリプトが `/tmp` にあるため、対象を自分の位置から決められない
-- 確認プロンプトを出さずに流す場合は `--yes`、タグを固定したい場合は `--ref v1.0.6`
+- 確認プロンプトを出さずに流す場合は `--yes`、タグを固定したい場合は `--ref v1.0.7`
 - スクリプトの実体は `setup/scripts/fetch-app.sh`。処理は「ダウンロード → レイアウト検証 → `prompt_history`/`test` の除去 → 旧ツリー退避 → `.env` / `setup-state.json` の引き継ぎ → `npm install` → `setup` の `next build` → `setup/.next/BUILD_ID` の存在確認」
 - `--build` を外すと `.next` が古いままになり、差し替えた画面が反映されない
 - `npm install` が `Cannot read properties of null (reading 'edgesOut')` で落ちる場合は `npx -y npm@11 install` を使う
