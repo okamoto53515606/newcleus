@@ -70,7 +70,15 @@ function normalizeLegacyType(raw: unknown): 'text' | 'file' | 'flag' | 'date' | 
   }
 }
 
-function toBase64(file: File): Promise<string> {
+/**
+ * File を Base64 と MIME タイプに変換する
+ *
+ * why: MIME を File.type から取ると、圧縮後の Blob で空になるブラウザがあり
+ *      `image/jpeg` にフォールバックして実データ（PNG 等）と食い違う。
+ *      サーバーはマジックバイトと申告 MIME の一致を検証するため、
+ *      data URL のヘッダ（実データ由来）から MIME を取り出す。
+ */
+function toBase64(file: File): Promise<{ data: string; mime: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -79,12 +87,16 @@ function toBase64(file: File): Promise<string> {
         reject(new Error('FileReader result is not a string'));
         return;
       }
-      const [, data] = result.split(',', 2);
-      if (!data) {
+      // why: 正規表現の `s` フラグは target が ES2018 以上でないと使えないため、
+      //      data URL をヘッダと本体に手で分ける（本体は改行を含みうる）。
+      const commaIndex = result.indexOf(',');
+      const header = commaIndex >= 0 ? result.slice(0, commaIndex) : '';
+      if (!header.startsWith('data:') || !header.endsWith(';base64')) {
         reject(new Error('Base64 data not found'));
         return;
       }
-      resolve(data);
+      const mime = header.slice('data:'.length, header.length - ';base64'.length);
+      resolve({ mime: mime.toLowerCase(), data: result.slice(commaIndex + 1) });
     };
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(file);
@@ -293,14 +305,17 @@ export function ItemForm({ siteId, itemId, fixedContentTypeId }: ItemFormProps) 
       useWebWorker: true,
     });
 
-    const dataBase64 = await toBase64(compressed);
+    const { data: dataBase64, mime } = await toBase64(compressed);
 
     const uploadRes = await fetchWithSigning('/api/admin/upload', {
       method: 'POST',
       body: JSON.stringify({
         filename: compressed.name,
-        contentType: compressed.type || 'image/jpeg',
+        contentType: mime || compressed.type || 'image/jpeg',
         dataBase64,
+        // why: サーバー側で siteadmin の担当サイト照合とメディアの名前空間分離
+        //      （media/sites/<siteId>/...）に使う。付け忘れると siteadmin は 400。
+        siteId,
       }),
     });
 
