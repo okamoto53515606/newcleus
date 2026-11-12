@@ -63,7 +63,7 @@
 
 - `( ... )` はサブシェルなので、途中で失敗しても WSL のシェル自体は閉じない（終了コードは `echo $?` で確認できる）
 - `--dir` は必須。スクリプトが `/tmp` にあるため、対象を自分の位置から決められない
-- 確認プロンプトを出さずに流す場合は `--yes`、タグを固定したい場合は `--ref v1.0.7`
+- 確認プロンプトを出さずに流す場合は `--yes`、タグを固定したい場合は `--ref v1.0.8`
 - スクリプトの実体は `setup/scripts/fetch-app.sh`。処理は「ダウンロード → レイアウト検証 → `prompt_history`/`test` の除去 → 旧ツリー退避 → `.env` / `setup-state.json` の引き継ぎ → `npm install` → `setup` の `next build` → `setup/.next/BUILD_ID` の存在確認」
 - `--build` を外すと `.next` が古いままになり、差し替えた画面が反映されない
 - `npm install` が `Cannot read properties of null (reading 'edgesOut')` で落ちる場合は `npx -y npm@11 install` を使う
@@ -180,6 +180,7 @@ rm -rf ~/newcleus.old-*    # 動作確認後
 | セットアップ画面は `next start` で配信する | `next dev` で配信する運用に変えるなら「`.next` 再ビルド必須」の記述（§1・§3-1・§4）が不要になる一方、起動が遅くなる |
 | CloudFront の default behavior は `CACHING_DISABLED` | キャッシュポリシーを変更したら、§4 に「キャッシュ削除」の手順と invalidation 用 API（現状未実装）が必要になる |
 | Node.js 24 系（`Dockerfile` も `node:24-alpine`） | 対応 Node を変更する場合は `fetch-app.sh` のバージョン警告、`docs/wsl.md` の nvm 手順、`Dockerfile` を同時に更新する |
+| Node.js のマイナー / パッチは固定しない（`node:24-alpine`） | バージョンを固定すると、セキュリティ更新（例: 2026-11-11 の v24.22.3）を再ビルドで取り込めず、Dockerfile の書き換え漏れが発生する。固定が必要になった場合は自動更新（Renovate 等）を併用する |
 | 高速更新（`/ops`）は未実装 | `/ops` を追加したら §2 の経路表を「コードのみ＝`/ops`」に書き換え、リリースノートの型（§6）も「押すボタン」を分けて書く |
 | 配布物は public リポジトリの tar から作る | private 化する場合は `fetch-app.sh` の取得方法（トークン / Releases のアセット）を変更する |
 | `.env` に `COGNITO_*` / `CLOUDFRONT_DOMAIN` が揃っている | 欠けていると `setup1b` のデプロイ後もログインできない。`setup1a` からやり直す |

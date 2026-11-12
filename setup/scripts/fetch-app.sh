@@ -20,7 +20,7 @@
 #   bash setup/scripts/fetch-app.sh                    # 自動判定（.env があれば update）
 #   bash setup/scripts/fetch-app.sh --update --build    # 既存環境の更新 + セットアップ再ビルド
 #   bash setup/scripts/fetch-app.sh --fresh --dist      # 配布イメージ作成用（ビルド + prune）
-#   bash setup/scripts/fetch-app.sh --ref v1.0.7 --yes  # タグ指定（既定は main）
+#   bash setup/scripts/fetch-app.sh --ref v1.0.8 --yes  # タグ指定（既定は main）
 #
 # オプション:
 #   --fresh        新規扱い。.env は env_template.txt から作る
@@ -217,9 +217,15 @@ if [[ "${DO_BUILD}" -eq 1 ]]; then
     echo "[エラー] npm が見つかりません。Node.js 24 系を入れて再実行してください（nvm use 24）" >&2
     exit 1
   fi
-  NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+  NODE_VER="$(node -p 'process.versions.node' 2>/dev/null || echo 0)"
+  NODE_MAJOR="${NODE_VER%%.*}"
   if [[ "${NODE_MAJOR}" -lt 24 ]]; then
-    echo "[警告] Node.js ${NODE_MAJOR} 系が使われています。24 系を推奨します（nvm use 24）" >&2
+    echo "[警告] Node.js ${NODE_VER} が使われています。24 系を推奨します（nvm use 24）" >&2
+  elif [[ "$(printf '%s\n%s\n' "${NODE_VER}" "24.22.3" | sort -V | head -1)" != "24.22.3" ]]; then
+    # why: 2026-11-11 のセキュリティ更新（v24.22.3）には high 7 件が含まれる。
+    #      バージョンは固定せず「これより古い場合だけ」警告する（次回の更新で
+    #      この行を直さなくても、新しい Node では黙って通るようにするため）。
+    echo "[警告] Node.js ${NODE_VER} は 2026-11-11 のセキュリティ修正（24.22.3 以降）より古い可能性があります。nvm install 24 で更新してください" >&2
   fi
 
   # why: setup は `next start` で配信するため、.next を作り直さないと画面が古いまま。
